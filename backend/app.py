@@ -36,6 +36,11 @@ sheets_service = GoogleSheetsService()
 ai_engine = AIQuotationEngine()
 quotation_service = QuotationService(sheets_service, ai_engine)
 
+
+@app.route("/healthz")
+def health():
+    return {"status": "ok"}
+    
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""

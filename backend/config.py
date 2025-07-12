@@ -12,7 +12,10 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 dotenv_path = os.path.join(BACKEND_DIR, '.env')
 load_dotenv(dotenv_path)
 
-CREDENTIALS_PATH = os.path.join(BACKEND_DIR, 'credentials.json')
+if os.getenv("RENDER"):
+    CREDENTIALS_PATH = "/etc/secrets/credentials.json"
+else:
+    CREDENTIALS_PATH = os.path.join(BACKEND_DIR, 'credentials.json')
 
 class Config:
     

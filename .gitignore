@@ -1,0 +1,27 @@
+# Ignore Python virtual environments
+venv/
+.env
+*.env
+
+# Ignore Node.js dependencies
+node_modules/
+
+# Ignore credentials and secrets
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.bak
+*.secret
+*.credentials
+secrets.*
+config.*.json
+config.*.yml
+config.*.yaml
+
+# Ignore editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/ 

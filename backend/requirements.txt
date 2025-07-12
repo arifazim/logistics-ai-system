@@ -1,0 +1,11 @@
+flask
+flask-cors
+flask-limiter
+gspread
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+pandas
+numpy
+scikit-learn
+python-dotenv

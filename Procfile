@@ -1,1 +1,0 @@
-web: sh render-deploy.sh

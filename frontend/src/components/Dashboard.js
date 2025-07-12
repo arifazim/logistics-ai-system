@@ -507,53 +507,7 @@ function Dashboard() {
           
           {/* Overview Charts */}
           <Grid container spacing={3} sx={{ mt: 3 }}>
-            <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 2, height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={600} mb={2}>
-                    Route Volume by Destination
-                  </Typography>
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={analytics?.route_volume_by_destination}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="area" />
-                        <YAxis />
-                        <RechartsTooltip />
-                        <Bar dataKey="count" name="Volume" fill="#3f51b5" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 2, height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={600} mb={2}>
-                    Average Rate by Vehicle Type
-                  </Typography>
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={analytics?.avg_rates_by_vehicle_type}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="vehicle_type" />
-                        <YAxis />
-                        <RechartsTooltip />
-                        <Bar dataKey="avg_rate" name="Average Rate" fill="#3f51b5" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            {/* Charts removed as requested */}
           </Grid>
         </Box>
       )}
@@ -618,53 +572,7 @@ function Dashboard() {
           
           {/* Savings Opportunities Charts */}
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 2, height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={600} mb={2}>
-                    Savings by Route
-                  </Typography>
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={analytics?.savings_opportunities?.slice(0, 8) || []}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="route" />
-                        <YAxis />
-                        <RechartsTooltip formatter={(value) => value ? `₹${value.toFixed(2)}` : '₹0.00'} />
-                        <Bar dataKey="potentialSavings" name="Savings" fill="#3f51b5" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 2, height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={600} mb={2}>
-                    Savings by Vehicle Type
-                  </Typography>
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={analytics?.savings_opportunities?.slice(0, 8) || []}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="vehicleType" />
-                        <YAxis />
-                        <RechartsTooltip formatter={(value) => value ? `₹${value.toFixed(2)}` : '₹0.00'} />
-                        <Bar dataKey="potentialSavings" name="Savings" fill="#3f51b5" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            {/* Charts removed as requested */}
           </Grid>
         </Box>
       )}
@@ -791,92 +699,7 @@ function Dashboard() {
           
           {/* Anomaly Summary */}
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 2, height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={600} mb={2}>
-                    Anomaly Distribution
-                  </Typography>
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={[
-                            { name: 'Overpriced', value: analytics?.anomalies?.filter(a => a.type === 'high').length || 0 },
-                            { name: 'Underpriced', value: analytics?.anomalies?.filter(a => a.type === 'low').length || 0 },
-                            { name: 'Normal', value: (analytics?.vendorRates?.length || 0) - (analytics?.anomalies?.length || 0) }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        >
-                          <Cell key="cell-0" fill="#f44336" />
-                          <Cell key="cell-1" fill="#4caf50" />
-                          <Cell key="cell-2" fill="#9e9e9e" />
-                        </Pie>
-                        <RechartsTooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 2, height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={600} mb={2}>
-                    Anomalies by Vendor
-                  </Typography>
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={(() => {
-                          // Count anomalies by vendor
-                          const anomalyByVendor = {};
-                          
-                          // Only process if anomalies array exists
-                          if (analytics?.anomalies && Array.isArray(analytics.anomalies)) {
-                            analytics.anomalies.forEach(anomaly => {
-                              if (!anomalyByVendor[anomaly.vendor]) {
-                                anomalyByVendor[anomaly.vendor] = { vendor: anomaly.vendor, high: 0, low: 0 };
-                              }
-                              anomalyByVendor[anomaly.vendor][anomaly.type]++;
-                            });
-                          }
-                          
-                          // Convert to array and sort by total anomalies
-                          const result = Object.values(anomalyByVendor);
-                          return result.length > 0 
-                            ? result.sort((a, b) => ((b.high + b.low) - (a.high + a.low))).slice(0, 8)
-                            : [];
-                        })()}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="vendor" />
-                        <YAxis />
-                        <RechartsTooltip formatter={(value) => value ? `₹${value.toFixed(2)}` : '₹0.00'} />
-                        <Legend formatter={(value, entry, index) => {
-                          const counts = [
-                            analytics?.anomalies?.filter(a => a.type === 'high').length || 0,
-                            analytics?.anomalies?.filter(a => a.type === 'low').length || 0,
-                            (analytics?.vendorRates?.length || 0) - (analytics?.anomalies?.length || 0)
-                          ];
-                          return `${value} (${counts[index]})`;
-                        }} />
-                        <Bar dataKey="high" name="Overpriced" fill="#f44336" />
-                        <Bar dataKey="low" name="Underpriced" fill="#4caf50" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+            {/* Charts removed as requested */}
           </Grid>
         </Box>
       )}

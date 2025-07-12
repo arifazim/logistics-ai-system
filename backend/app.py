@@ -40,7 +40,7 @@ quotation_service = QuotationService(sheets_service, ai_engine)
 @app.route("/healthz")
 def health():
     return {"status": "ok"}
-    
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -137,4 +137,5 @@ def get_vendor_rates():
         return jsonify({'success': False, 'rates': [], 'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

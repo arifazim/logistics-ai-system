@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
-# Go to frontend and build
+# Build frontend
 cd frontend
 npm install
 npm run build
 cd ..
 
-# Start Flask backend
+# Install backend deps
 cd backend
 pip install -r requirements.txt
-
-# Run frontend and backend together
 cd ..
-npx serve -s frontend/build & python backend/app.py
+
+# Serve frontend and start Flask
+cd ..
+npx serve -s frontend/build &
+python backend/app.py

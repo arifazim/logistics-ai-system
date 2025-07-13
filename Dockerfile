@@ -7,7 +7,7 @@
     COPY frontend/package.json frontend/package-lock.json ./
     
     # Install dependencies
-    RUN npm ci
+    RUN npm install --legacy-peer-deps
     
     # Copy frontend source code
     COPY frontend/ ./

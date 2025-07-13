@@ -1,18 +1,9 @@
 # ----------- FRONTEND BUILD STAGE -----------
-    FROM node:16-alpine AS frontend-build
-
+    FROM node:18 AS frontend-build
     WORKDIR /app/frontend
-    
-    # Copy frontend package files
-    COPY frontend/package.json frontend/package-lock.json ./
-    
-    # Install dependencies
+    COPY frontend/package*.json ./
     RUN npm install --legacy-peer-deps
-    
-    # Copy frontend source code
     COPY frontend/ ./
-    
-    # Build frontend
     RUN npm run build
     
     # ----------- BACKEND BUILD STAGE -----------

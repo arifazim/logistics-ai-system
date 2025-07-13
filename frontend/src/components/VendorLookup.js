@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Search, Filter, BarChart3, ArrowUpDown, X, TrendingUp, TrendingDown, Minus, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
+import './VendorLookup.css';
 
 // Real API function to fetch vendor rates from backend
 const fetchVendorRates = async () => {
@@ -203,10 +204,10 @@ const VendorLookup = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="loading-container">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading vendor data...</p>
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading vendor data...</p>
         </div>
       </div>
     );
@@ -214,145 +215,156 @@ const VendorLookup = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-          <div className="flex items-center mb-2">
-            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
-              <X className="w-4 h-4 text-red-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-red-800">Error</h3>
-          </div>
-          <p className="text-red-700">{error}</p>
+      <div className="error-container">
+        <div className="text-center">
+          <div className="error-text">Error</div>
+          <p className="error-details">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Vendor Rate Comparison
-          </h1>
-          <p className="text-gray-600">
-            Compare rates across vendors and identify the best pricing opportunities for your routes.
-          </p>
-        </div>
+    <div className="vendor-lookup-container">
+      <div>
+        <h1 className="page-title">Vendor Rate Lookup</h1>
+        <p className="page-subtitle">Search and compare vendor rates across different routes and identify the best pricing opportunities for your routes.</p>
+      </div>
 
-        {/* Controls */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4 mb-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      {/* Controls */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 mb-4">
+          {/* Search and Filter */}
+          <div className="search-filter-container">
+            <div className="search-container">
+              <Search className="search-icon" />
               <input
                 type="text"
-                placeholder="Search vendors, routes, or vehicle types..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Search vendors, origins, destinations or vehicle types..."
+                className="search-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             
             {/* Filter Toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-            </button>
-            
-            {/* Stats Toggle */}
-            <button
-              onClick={() => setShowStats(!showStats)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              Stats
-            </button>
+            <div className="flex justify-between">
+              <button 
+                className="filter-button"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4" />
+                <span>Filters</span>
+              </button>
+              
+              {/* Stats Toggle */}
+              <button
+                onClick={() => setShowStats(!showStats)}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                Stats
+              </button>
+            </div>
           </div>
 
           {/* Filters */}
           {showFilters && (
-            <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
-              <select
-                value={vehicleFilter}
-                onChange={(e) => setVehicleFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="all">All Vehicles</option>
-                {uniqueVehicles.map(vehicle => (
-                  <option key={vehicle} value={vehicle}>{vehicle}</option>
-                ))}
-              </select>
+            <div className="filters-panel">
+              <div className="filter-row">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
+                  <select 
+                    className="filter-select"
+                    value={vehicleFilter}
+                    onChange={(e) => setVehicleFilter(e.target.value)}
+                  >
+                    <option value="all">All Vehicle Types</option>
+                    {uniqueVehicles.map(vehicle => (
+                      <option key={vehicle} value={vehicle}>{vehicle}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Origin</label>
+                  <select 
+                    className="filter-select"
+                    value={originFilter}
+                    onChange={(e) => setOriginFilter(e.target.value)}
+                  >
+                    <option value="all">All Origins</option>
+                    {uniqueOrigins.map(origin => (
+                      <option key={origin} value={origin}>{origin}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               
-              <select
-                value={originFilter}
-                onChange={(e) => setOriginFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="all">All Origins</option>
-                {uniqueOrigins.map(origin => (
-                  <option key={origin} value={origin}>{origin}</option>
-                ))}
-              </select>
+              <div className="flex justify-end">
+                <button 
+                  className="close-button"
+                  onClick={() => setShowFilters(false)}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           )}
 
           {/* Route Selection */}
-          <div className="mt-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Select Routes to Compare</h3>
-            <div className="max-h-32 overflow-y-auto bg-gray-50 rounded-lg p-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {uniqueRoutes.slice(0, 20).map(route => (
-                  <label key={route} className="flex items-center gap-2 p-2 hover:bg-white rounded cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedRoutes.includes(route)}
-                      onChange={() => handleRouteToggle(route)}
-                      className="text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="text-sm text-gray-700 truncate">{route}</span>
-                  </label>
-                ))}
+          <div className="routes-container">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="section-title">Select Routes to Compare</h2>
+              <div className="flex items-center">
+                <button 
+                  className="flex items-center text-sm text-indigo-600 hover:text-indigo-800"
+                  onClick={() => setShowStats(!showStats)}
+                >
+                  {showStats ? (
+                    <>
+                      <EyeOff className="h-4 w-4 mr-1" />
+                      Hide Stats
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4 mr-1" />
+                      Show Stats
+                    </>
+                  )}
+                </button>
               </div>
             </div>
+            
+            <div className="routes-grid">
+              {uniqueRoutes.map(route => (
+                <button
+                  key={route}
+                  onClick={() => handleRouteToggle(route)}
+                  className={`route-chip ${selectedRoutes.includes(route) ? 'selected' : ''}`}
+                >
+                  {route}
+                </button>
+              ))}
+            </div>    
           </div>
         </div>
 
         {/* Route Statistics */}
         {showStats && selectedRoutes.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Route Statistics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {selectedRoutes.map(route => {
-                const stats = routeStats[route];
-                if (!stats) return null;
-                
-                return (
-                  <div key={route} className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2 text-sm">{route}</h4>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Avg Rate:</span>
-                        <span className="font-medium">₹{stats.avgRate}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Vendors:</span>
-                        <span className="font-medium">{stats.vendorCount}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Range:</span>
-                        <span className="font-medium">₹{stats.minRate} - ₹{stats.maxRate}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="stats-container">
+            {selectedRoutes.map(route => {
+              const stats = routeStats[route];
+              if (!stats) return null;
+              
+              return (
+                <div key={route} className="stat-card">
+                  <div className="stat-title">{route}</div>
+                  <div className="stat-value">₹{stats.avgRate}</div>
+                  <div className="stat-subtitle">{stats.vendorCount} vendors · ₹{stats.minRate} to ₹{stats.maxRate}</div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -470,7 +482,7 @@ const VendorLookup = () => {
         )}
 
         {/* Footer Info */}
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="footer-info">
           Showing {paginatedData.length} of {comparisonData.length} vendors
         </div>
       </div>

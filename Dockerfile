@@ -1,6 +1,21 @@
-# ----------- FINAL STAGE -----------
+# ----------- FRONTEND BUILD STAGE -----------
+    FROM node:18 AS frontend-build
+    WORKDIR /app/frontend
+    COPY frontend/package.json frontend/package-lock.json ./
+    RUN npm install --legacy-peer-deps
+    COPY frontend/ ./
+    RUN npm run build
+    
+    # ----------- BACKEND BUILD STAGE -----------
+    FROM python:3.10-slim AS backend-build
+    WORKDIR /app/backend
+    COPY backend/requirements.txt ./
+    RUN pip install --no-cache-dir -r requirements.txt
+    COPY backend/ ./
+    
+    # ----------- FINAL STAGE -----------
     FROM nginx:alpine AS production
-
+    
     WORKDIR /app
     
     # Copy frontend build to nginx html dir
@@ -14,8 +29,8 @@
     COPY --from=backend-build /app/backend /app/backend
     
     # Install dependencies
-    RUN apk add --no-cache supervisor python3 py3-pip && \
-        pip install --no-cache-dir gunicorn
+    RUN apk add --no-cache supervisor && \
+        pip install --no-cache-dir flask
     
     # Expose port
     EXPOSE 80

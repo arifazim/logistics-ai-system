@@ -5,6 +5,7 @@ import axios from 'axios';
 // Real API function to fetch vendor rates from backend
 const fetchVendorRates = async () => {
   try {
+    // With proxy configuration in package.json, this will be forwarded to http://localhost:5000/api/vendor-rates
     const response = await axios.get('/api/vendor-rates');
     return response.data; // Backend already returns { success: true, rates: [...] }
   } catch (error) {

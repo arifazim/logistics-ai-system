@@ -1,7 +1,22 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Search, Filter, BarChart3, ArrowUpDown, X, TrendingUp, TrendingDown, Minus, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
-import './VendorLookup.css';
+import {
+  Box, Typography, Paper, Grid, Card, CardContent, CardHeader,
+  Chip, Button, IconButton, Avatar, Tooltip, CircularProgress,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem,
+  Divider, Alert, Stack, Switch, FormControlLabel, Tabs, Tab, Badge,
+  InputAdornment, Pagination
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CloseIcon from '@mui/icons-material/Close';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import RemoveIcon from '@mui/icons-material/Remove';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { useTheme } from '@mui/material/styles';
 
 // Real API function to fetch vendor rates from backend
 const fetchVendorRates = async () => {
@@ -16,6 +31,7 @@ const fetchVendorRates = async () => {
 };
 
 const VendorLookup = () => {
+  const theme = useTheme();
   const [allVendorRates, setAllVendorRates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -185,308 +201,315 @@ const VendorLookup = () => {
   };
 
   const getPriceTagStyle = (tag) => {
-    const styles = {
-      low: 'bg-green-100 text-green-800 border-green-200',
-      mid: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      high: 'bg-red-100 text-red-800 border-red-200',
-      single: 'bg-gray-100 text-gray-800 border-gray-200'
-    };
-    return styles[tag] || styles.single;
+    switch (tag) {
+      case 'low': return { bgcolor: '#e8f5e9', color: '#2e7d32', borderColor: '#a5d6a7' };
+      case 'mid': return { bgcolor: '#fff8e1', color: '#f57f17', borderColor: '#ffe082' };
+      case 'high': return { bgcolor: '#ffebee', color: '#c62828', borderColor: '#ef9a9a' };
+      case 'single': return { bgcolor: '#fff', color: '#333', borderColor: '#ddd' };
+      default: return { bgcolor: '#f5f5f5', color: '#616161', borderColor: '#e0e0e0' };
+    }
   };
 
   const getPriceIcon = (tag) => {
     switch (tag) {
-      case 'low': return <TrendingDown className="w-3 h-3" />;
-      case 'high': return <TrendingUp className="w-3 h-3" />;
-      default: return <Minus className="w-3 h-3" />;
+      case 'low': return <TrendingDownIcon fontSize="small" />;
+      case 'high': return <TrendingUpIcon fontSize="small" />;
+      default: return <RemoveIcon fontSize="small" />;
     }
   };
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="text-center">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading vendor data...</p>
-        </div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress size={48} sx={{ mb: 2 }} />
+          <Typography color="text.secondary">Loading vendor data...</Typography>
+        </Box>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="text-center">
-          <div className="error-text">Error</div>
-          <p className="error-details">{error}</p>
-        </div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <Alert severity="error" sx={{ maxWidth: 500 }}>
+          <Typography variant="h6" gutterBottom>Error</Typography>
+          <Typography variant="body2">{error}</Typography>
+        </Alert>
+      </Box>
     );
   }
 
   return (
-    <div className="vendor-lookup-container">
-      <div>
-        <h1 className="page-title">Vendor Rate Lookup</h1>
-        <p className="page-subtitle">Search and compare vendor rates across different routes and identify the best pricing opportunities for your routes.</p>
-      </div>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+      <Typography variant="h4" fontWeight={700} mb={1}>
+        Vendor Rate Lookup
+      </Typography>
+      <Typography variant="body1" color="text.secondary" mb={3}>
+        Search and compare vendor rates across different routes and identify the best pricing opportunities for your routes.
+      </Typography>
 
       {/* Controls */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="flex flex-col lg:flex-row gap-4 mb-4">
-          {/* Search and Filter */}
-          <div className="search-filter-container">
-            <div className="search-container">
-              <Search className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search vendors, origins, destinations or vehicle types..."
-                className="search-input"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          placeholder="Search vendors, origins, destinations or vehicle types..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            )
+          }}
+          variant="outlined"
+          size="small"
+          sx={{ mb: 2 }}
+        />
+        
+        {/* Filter Toggle */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button
+            variant="outlined"
+            startIcon={<FilterListIcon />}
+            onClick={() => setShowFilters(!showFilters)}
+            size="small"
+          >
+            Filters
+          </Button>
+          
+          {/* Stats Toggle */}
+          <Button
+            startIcon={showStats ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            onClick={() => setShowStats(!showStats)}
+            size="small"
+            color="primary"
+          >
+            {showStats ? 'Hide Stats' : 'Show Stats'}
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Filters */}
+      {showFilters && (
+        <Paper sx={{ p: 2, mb: 3 }} elevation={1}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Vehicle Type</InputLabel>
+                <Select
+                  value={vehicleFilter}
+                  onChange={(e) => setVehicleFilter(e.target.value)}
+                  label="Vehicle Type"
+                >
+                  <MenuItem value="all">All Vehicle Types</MenuItem>
+                  {uniqueVehicles.map(vehicle => (
+                    <MenuItem key={vehicle} value={vehicle}>{vehicle}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Origin</InputLabel>
+                <Select
+                  value={originFilter}
+                  onChange={(e) => setOriginFilter(e.target.value)}
+                  label="Origin"
+                >
+                  <MenuItem value="all">All Origins</MenuItem>
+                  {uniqueOrigins.map(origin => (
+                    <MenuItem key={origin} value={origin}>{origin}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <IconButton
+              size="small"
+              onClick={() => setShowFilters(false)}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </Paper>
+      )}
+
+      {/* Routes Selection */}
+      <Card sx={{ mb: 3 }} elevation={1}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Select Routes to Compare</Typography>
+            <Button
+              startIcon={showStats ? <VisibilityOffIcon /> : <VisibilityIcon />}
+              onClick={() => setShowStats(!showStats)}
+              size="small"
+              color="primary"
+            >
+              {showStats ? 'Hide Stats' : 'Show Stats'}
+            </Button>
+          </Box>
+          
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {uniqueRoutes.map(route => (
+              <Chip
+                key={route}
+                label={route}
+                onClick={() => handleRouteToggle(route)}
+                color={selectedRoutes.includes(route) ? "primary" : "default"}
+                variant={selectedRoutes.includes(route) ? "filled" : "outlined"}
+                size="small"
+                clickable
               />
-            </div>
-            
-            {/* Filter Toggle */}
-            <div className="flex justify-between">
-              <button 
-                className="filter-button"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="h-4 w-4" />
-                <span>Filters</span>
-              </button>
-              
-              {/* Stats Toggle */}
-              <button
-                onClick={() => setShowStats(!showStats)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                Stats
-              </button>
-            </div>
-          </div>
+            ))}
+          </Box>    
+        </CardContent>
+      </Card>
 
-          {/* Filters */}
-          {showFilters && (
-            <div className="filters-panel">
-              <div className="filter-row">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                  <select 
-                    className="filter-select"
-                    value={vehicleFilter}
-                    onChange={(e) => setVehicleFilter(e.target.value)}
-                  >
-                    <option value="all">All Vehicle Types</option>
-                    {uniqueVehicles.map(vehicle => (
-                      <option key={vehicle} value={vehicle}>{vehicle}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Origin</label>
-                  <select 
-                    className="filter-select"
-                    value={originFilter}
-                    onChange={(e) => setOriginFilter(e.target.value)}
-                  >
-                    <option value="all">All Origins</option>
-                    {uniqueOrigins.map(origin => (
-                      <option key={origin} value={origin}>{origin}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div className="flex justify-end">
-                <button 
-                  className="close-button"
-                  onClick={() => setShowFilters(false)}
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Route Selection */}
-          <div className="routes-container">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="section-title">Select Routes to Compare</h2>
-              <div className="flex items-center">
-                <button 
-                  className="flex items-center text-sm text-indigo-600 hover:text-indigo-800"
-                  onClick={() => setShowStats(!showStats)}
-                >
-                  {showStats ? (
-                    <>
-                      <EyeOff className="h-4 w-4 mr-1" />
-                      Hide Stats
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="h-4 w-4 mr-1" />
-                      Show Stats
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-            
-            <div className="routes-grid">
-              {uniqueRoutes.map(route => (
-                <button
-                  key={route}
-                  onClick={() => handleRouteToggle(route)}
-                  className={`route-chip ${selectedRoutes.includes(route) ? 'selected' : ''}`}
-                >
-                  {route}
-                </button>
-              ))}
-            </div>    
-          </div>
-        </div>
-
-        {/* Route Statistics */}
-        {showStats && selectedRoutes.length > 0 && (
-          <div className="stats-container">
+      {/* Route Statistics */}
+      {showStats && selectedRoutes.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Grid container spacing={2}>
             {selectedRoutes.map(route => {
               const stats = routeStats[route];
               if (!stats) return null;
               
               return (
-                <div key={route} className="stat-card">
-                  <div className="stat-title">{route}</div>
-                  <div className="stat-value">₹{stats.avgRate}</div>
-                  <div className="stat-subtitle">{stats.vendorCount} vendors · ₹{stats.minRate} to ₹{stats.maxRate}</div>
-                </div>
+                <Grid item xs={12} sm={6} md={4} key={route}>
+                  <Paper sx={{ p: 2, bgcolor: '#f5f5f5' }} variant="outlined">
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {route}
+                    </Typography>
+                    <Typography variant="h6" fontWeight="bold" sx={{ my: 0.5 }}>
+                      ₹{stats.avgRate}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {stats.vendorCount} vendors · ₹{stats.minRate} to ₹{stats.maxRate}
+                    </Typography>
+                  </Paper>
+                </Grid>
               );
             })}
-          </div>
-        )}
+          </Grid>
+        </Box>
+      )}
 
-        {/* Price Legend */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          {[
-            { key: 'low', label: 'Lowest Price', icon: TrendingDown },
-            { key: 'mid', label: 'Mid Price', icon: Minus },
-            { key: 'high', label: 'Highest Price', icon: TrendingUp }
-          ].map(({ key, label, icon: Icon }) => (
-            <div key={key} className="flex items-center gap-2">
-              <div className={`w-4 h-4 rounded-full border ${getPriceTagStyle(key)}`}></div>
-              <span className="text-sm text-gray-600">{label}</span>
-            </div>
-          ))}
-        </div>
+      {/* Price Legend */}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+        {[
+          { key: 'low', label: 'Lowest Price', icon: TrendingDown },
+          { key: 'mid', label: 'Mid Price', icon: RemoveIcon },
+          { key: 'high', label: 'Highest Price', icon: TrendingUp }
+        ].map(({ key, label, icon: Icon }) => (
+          <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 16, height: 16, borderRadius: 1, ...getPriceTagStyle(key) }} />
+            <Typography variant="body2" color="text.secondary">{label}</Typography>
+          </Box>
+        ))}
+      </Box>
 
-        {/* Comparison Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
-                    Vendor
-                  </th>
-                  {selectedRoutes.map(route => (
-                    <th key={route} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                      {route}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.length === 0 ? (
-                  <tr>
-                    <td colSpan={selectedRoutes.length + 1} className="px-6 py-8 text-center text-gray-500">
-                      {selectedRoutes.length === 0 ? 'Please select routes to compare' : 'No matching vendors found'}
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map((vendor, index) => (
-                    <tr key={vendor.vendor} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-sm font-medium text-indigo-800">
-                              {vendor.vendor.charAt(0)}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{vendor.vendor}</div>
-                            <div className="text-sm text-gray-500">{vendor.totalRoutes} routes</div>
-                          </div>
-                        </div>
-                      </td>
-                      {selectedRoutes.map(route => {
-                        const routeData = vendor.routeData[route];
-                        return (
-                          <td key={route} className="px-6 py-4 whitespace-nowrap text-center">
-                            {routeData ? (
-                              <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getPriceTagStyle(routeData.tag)}`}>
-                                {getPriceIcon(routeData.tag)}
-                                ₹{routeData.rate}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-6">
-            <nav className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                    currentPage === i + 1
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                  }`}
+      {/* Comparison Table */}
+      <TableContainer component={Paper} sx={{ mb: 3, overflow: 'auto' }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ position: 'sticky', left: 0, bgcolor: '#f5f5f5', zIndex: 3, fontWeight: 'bold' }}>
+                Vendor
+              </TableCell>
+              {selectedRoutes.map(route => (
+                <TableCell 
+                  key={route} 
+                  align="center"
+                  sx={{ fontWeight: 'bold', minWidth: 120 }}
                 >
-                  {i + 1}
-                </button>
+                  {route}
+                </TableCell>
               ))}
-              
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </nav>
-          </div>
-        )}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={selectedRoutes.length + 1} align="center">
+                  {selectedRoutes.length === 0 ? 'Please select routes to compare' : 'No matching vendors found'}
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedData.map((vendor, index) => (
+                <TableRow key={vendor.vendor} hover>
+                  <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'white', zIndex: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar 
+                        sx={{ 
+                          bgcolor: theme.palette.primary.light, 
+                          color: theme.palette.primary.contrastText,
+                          width: 32, 
+                          height: 32,
+                          mr: 1
+                        }}
+                      >
+                        {vendor.vendor.charAt(0)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2" fontWeight="medium">
+                          {vendor.vendor}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {vendor.totalRoutes} routes
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  {selectedRoutes.map(route => {
+                    const routeData = vendor.routeData[route];
+                    return (
+                      <TableCell key={route} align="center">
+                        {routeData ? (
+                          <Chip
+                            size="small"
+                            label={`₹${routeData.rate}`}
+                            icon={getPriceIcon(routeData.tag)}
+                            sx={{
+                              ...getPriceTagStyle(routeData.tag),
+                              '& .MuiChip-icon': { color: 'inherit' }
+                            }}
+                          />
+                        ) : (
+                          <Typography variant="body2" color="text.disabled">-</Typography>
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={(e, page) => setCurrentPage(page)}
+            color="primary"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
 
-        {/* Footer Info */}
-        <div className="footer-info">
-          Showing {paginatedData.length} of {comparisonData.length} vendors
-        </div>
-      </div>
-    </div>
+      {/* Footer Info */}
+      <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
+        Showing {paginatedData.length} of {comparisonData.length} vendors
+      </Typography>
+    </Box>
   );
 };
 

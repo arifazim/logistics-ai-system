@@ -23,8 +23,9 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
 
-// With proxy configuration in package.json, we can use relative URLs
-const API_URL = '/api';
+// API URL configuration for both development and production environments
+const API_URL = process.env.REACT_APP_API_URL || '/api';
+console.log(`Using API URL: ${API_URL}`);
 
 // Price tag colors
 const priceTagColors = {

@@ -1,29 +1,33 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import {
-  Box, Typography, Paper, Grid, Card, CardContent, CardHeader,
-  Chip, Button, IconButton, Avatar, Tooltip, CircularProgress,
+  Box, Typography, TextField, InputAdornment, Button, Chip,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem,
-  Divider, Alert, Stack, Switch, FormControlLabel, Tabs, Tab, Badge,
-  InputAdornment, Pagination
+  Paper, Avatar, Pagination, CircularProgress, Alert, Card, CardContent,
+  FormControl, InputLabel, Select, MenuItem, Grid, Divider,
+  Tooltip, IconButton, Checkbox, ListItemText, OutlinedInput
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import CloseIcon from '@mui/icons-material/Close';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import RemoveIcon from '@mui/icons-material/Remove';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
+import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
 
-// Real API function to fetch vendor rates from backend
+// API URL configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+
+// Function to fetch vendor rates from backend
 const fetchVendorRates = async () => {
   try {
-    // With proxy configuration in package.json, this will be forwarded to http://localhost:5000/api/vendor-rates
-    const response = await axios.get('/api/vendor-rates');
-    return response.data; // Backend already returns { success: true, rates: [...] }
+    console.log(`Fetching vendor rates from: ${API_BASE_URL}/vendor-rates`);
+    const response = await axios.get(`${API_BASE_URL}/vendor-rates`);
+    console.log('API Response:', response.data);
+    return response.data;
   } catch (error) {
     console.error('Error fetching vendor rates:', error);
     return { success: false, rates: [], error: error.message };
@@ -35,13 +39,12 @@ const VendorLookup = () => {
   const [allVendorRates, setAllVendorRates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRoutes, setSelectedRoutes] = useState([]);
+  const [selectedRoute, setSelectedRoute] = useState('');
+  const [selectedVendors, setSelectedVendors] = useState([]);
   const [vehicleFilter, setVehicleFilter] = useState('all');
-  const [originFilter, setOriginFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showStats, setShowStats] = useState(true);
+  const [sortConfig, setSortConfig] = useState({ key: 'vehicle', direction: 'asc' });
   
   const ITEMS_PER_PAGE = 15;
 
@@ -51,15 +54,16 @@ const VendorLookup = () => {
       try {
         setLoading(true);
         const response = await fetchVendorRates();
-        if (response.success) {
+        
+        if (response && response.rates && Array.isArray(response.rates)) {
+          console.log('Received vendor rates:', response.rates.length);
           setAllVendorRates(response.rates);
-          // Auto-select first 3 routes
-          const uniqueRoutes = [...new Set(response.rates.map(r => `${r.from_origin} → ${r.area} | ${r.vehicle_type}`))];
-          setSelectedRoutes(uniqueRoutes.slice(0, 3));
         } else {
-          setError('Failed to load vendor rates');
+          console.error('Invalid API response format:', response);
+          setError('Failed to load vendor rates - invalid data format');
         }
       } catch (err) {
+        console.error('Error in loadData:', err);
         setError('Error loading data: ' + err.message);
       } finally {
         setLoading(false);
@@ -69,233 +73,357 @@ const VendorLookup = () => {
     loadData();
   }, []);
 
-  // Get unique values for filters
-  const uniqueVehicles = useMemo(() => 
-    [...new Set(allVendorRates.map(r => r.vehicle_type))].sort(),
-    [allVendorRates]
-  );
-  
-  const uniqueOrigins = useMemo(() => 
-    [...new Set(allVendorRates.map(r => r.from_origin))].sort(),
-    [allVendorRates]
-  );
-
-  const uniqueRoutes = useMemo(() => 
-    [...new Set(allVendorRates.map(r => `${r.from_origin} → ${r.area} | ${r.vehicle_type}`))].sort(),
-    [allVendorRates]
-  );
-
-  // Filter and search data
-  const filteredData = useMemo(() => {
-    return allVendorRates.filter(rate => {
-      const matchesSearch = !searchTerm || 
-        rate.from_origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rate.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rate.vehicle_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rate.vendor_name.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesVehicle = vehicleFilter === 'all' || rate.vehicle_type === vehicleFilter;
-      const matchesOrigin = originFilter === 'all' || rate.from_origin === originFilter;
-      
-      return matchesSearch && matchesVehicle && matchesOrigin;
+  // Extract unique routes, vehicles, and vendors
+  const { uniqueRoutes, uniqueVehicles, uniqueVendors, vendorsByRoute } = useMemo(() => {
+    const routes = new Set();
+    const vehicles = new Set();
+    const vendors = new Set();
+    const vendorsByRoute = {};
+    
+    // Process all vendor rates to extract routes and vendors
+    allVendorRates.forEach(rate => {
+      if (rate.from_origin && rate.area && 
+          rate.from_origin !== 'undefined' && rate.area !== 'undefined') {
+        
+        const routeKey = `${rate.from_origin} → ${rate.area}`;
+        routes.add(routeKey);
+        
+        if (rate.vehicle_type) {
+          vehicles.add(rate.vehicle_type);
+        }
+        
+        if (rate.vendor_name) {
+          vendors.add(rate.vendor_name);
+          
+          // Group vendors by route
+          if (!vendorsByRoute[routeKey]) {
+            vendorsByRoute[routeKey] = new Set();
+          }
+          vendorsByRoute[routeKey].add(rate.vendor_name);
+        }
+      }
     });
-  }, [allVendorRates, searchTerm, vehicleFilter, originFilter]);
+    
+    console.log('Routes found:', Array.from(routes));
+    console.log('Vendors by route:', Object.fromEntries(
+      Object.entries(vendorsByRoute).map(([route, vendorSet]) => [route, Array.from(vendorSet)])
+    ));
+    
+    return {
+      uniqueRoutes: Array.from(routes).sort(),
+      uniqueVehicles: Array.from(vehicles).sort(),
+      uniqueVendors: Array.from(vendors).sort(),
+      vendorsByRoute
+    };
+  }, [allVendorRates]);
 
-  // Prepare comparison data
-  const comparisonData = useMemo(() => {
-    if (!selectedRoutes.length) return [];
+  // Get vendors for selected route
+  const vendorsForSelectedRoute = useMemo(() => {
+    if (!selectedRoute || !vendorsByRoute[selectedRoute]) return [];
+    return Array.from(vendorsByRoute[selectedRoute]).sort();
+  }, [selectedRoute, vendorsByRoute]);
+
+  // Filter data by selected route
+  const filteredData = useMemo(() => {
+    if (!selectedRoute) return [];
     
-    const vendorMap = new Map();
+    // Parse the selected route
+    const [origin, destination] = selectedRoute.split(' → ');
     
-    filteredData.forEach(rate => {
-      const routeKey = `${rate.from_origin} → ${rate.area} | ${rate.vehicle_type}`;
-      if (!selectedRoutes.includes(routeKey)) return;
-      
-      if (!vendorMap.has(rate.vendor_name)) {
-        vendorMap.set(rate.vendor_name, {
-          vendor: rate.vendor_name,
-          routes: new Map(),
-          totalRoutes: 0,
-          avgRate: 0
-        });
+    return allVendorRates.filter(rate => {
+      // Match the selected route
+      if (rate.from_origin !== origin) {
+        return false;
       }
       
-      const vendor = vendorMap.get(rate.vendor_name);
-      vendor.routes.set(routeKey, rate.rate);
+      // Check destination - using area field
+      if (rate.area !== destination) {
+        return false;
+      }
+      
+      // Apply vehicle type filter
+      if (vehicleFilter !== 'all' && rate.vehicle_type !== vehicleFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [allVendorRates, selectedRoute, vehicleFilter]);
+
+  // Process data for matrix display (vehicle types in rows, vendors in columns)
+  const processedData = useMemo(() => {
+    if (!filteredData.length || !selectedVendors.length) return { vehicles: [], vendorRates: {} };
+    
+    // Get all vehicle types for the selected route
+    const vehicleTypes = [...new Set(filteredData
+      .filter(rate => rate.vehicle_type) // Only include rates with vehicle type
+      .map(rate => rate.vehicle_type))]
+      .sort();
+    
+    // Create a map of vendor rates by vehicle type
+    const vendorRates = {};
+    const priceTagsByVehicle = {};
+    
+    // Initialize the structure
+    vehicleTypes.forEach(vehicleType => {
+      vendorRates[vehicleType] = {};
+      priceTagsByVehicle[vehicleType] = {};
+      
+      selectedVendors.forEach(vendor => {
+        vendorRates[vehicleType][vendor] = null;
+      });
     });
     
-    // Calculate stats and price tags
-    const result = Array.from(vendorMap.values()).map(vendor => {
-      const routeRates = Array.from(vendor.routes.values());
-      vendor.totalRoutes = routeRates.length;
-      vendor.avgRate = routeRates.reduce((sum, rate) => sum + rate, 0) / routeRates.length;
+    // Fill in the rates
+    filteredData.forEach(rate => {
+      if (rate.vehicle_type && selectedVendors.includes(rate.vendor_name)) {
+        vendorRates[rate.vehicle_type][rate.vendor_name] = rate.rate;
+      }
+    });
+    
+    // Calculate price tags for each vehicle type
+    vehicleTypes.forEach(vehicleType => {
+      const rates = [];
       
-      // Add price tags for each route
-      vendor.routeData = {};
-      selectedRoutes.forEach(route => {
-        const rate = vendor.routes.get(route);
-        if (rate) {
-          // Get all rates for this route to determine price tag
-          const allRatesForRoute = Array.from(vendorMap.values())
-            .map(v => v.routes.get(route))
-            .filter(Boolean)
-            .sort((a, b) => a - b);
-          
-          let tag = 'single';
-          if (allRatesForRoute.length > 1) {
-            const minRate = allRatesForRoute[0];
-            const maxRate = allRatesForRoute[allRatesForRoute.length - 1];
-            if (rate === minRate) tag = 'low';
-            else if (rate === maxRate) tag = 'high';
-            else tag = 'mid';
-          }
-          
-          vendor.routeData[route] = { rate, tag };
-        }
+      // Collect all rates for this vehicle type
+      selectedVendors.forEach(vendor => {
+        const rate = vendorRates[vehicleType][vendor];
+        if (rate !== null) rates.push({ vendor, rate });
       });
       
-      return vendor;
-    });
-    
-    // Sort by coverage and then by average rate
-    return result.sort((a, b) => {
-      if (b.totalRoutes !== a.totalRoutes) return b.totalRoutes - a.totalRoutes;
-      return a.avgRate - b.avgRate;
-    });
-  }, [filteredData, selectedRoutes]);
-
-  // Pagination
-  const totalPages = Math.ceil(comparisonData.length / ITEMS_PER_PAGE);
-  const paginatedData = comparisonData.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  // Route statistics
-  const routeStats = useMemo(() => {
-    const stats = {};
-    selectedRoutes.forEach(route => {
-      const rates = comparisonData
-        .map(v => v.routeData[route]?.rate)
-        .filter(Boolean);
+      // Sort rates to determine price tags
+      rates.sort((a, b) => a.rate - b.rate);
       
-      if (rates.length > 0) {
-        stats[route] = {
-          avgRate: Math.round(rates.reduce((sum, rate) => sum + rate, 0) / rates.length),
-          vendorCount: rates.length,
-          minRate: Math.min(...rates),
-          maxRate: Math.max(...rates)
-        };
+      if (rates.length === 1) {
+        // Only one vendor has a rate for this vehicle type
+        priceTagsByVehicle[vehicleType][rates[0].vendor] = 'single';
+      } else if (rates.length > 1) {
+        // Multiple vendors have rates for this vehicle type
+        const minRate = rates[0].rate;
+        const maxRate = rates[rates.length - 1].rate;
+        
+        rates.forEach(({ vendor, rate }) => {
+          if (rate === minRate) {
+            priceTagsByVehicle[vehicleType][vendor] = 'low';
+          } else if (rate === maxRate) {
+            priceTagsByVehicle[vehicleType][vendor] = 'high';
+          } else {
+            priceTagsByVehicle[vehicleType][vendor] = 'mid';
+          }
+        });
       }
     });
-    return stats;
-  }, [selectedRoutes, comparisonData]);
+    
+    // Create the final data structure
+    const vehicles = vehicleTypes.map(vehicleType => {
+      // Calculate stats for this vehicle type
+      const rates = [];
+      selectedVendors.forEach(vendor => {
+        const rate = vendorRates[vehicleType][vendor];
+        if (rate !== null) rates.push(rate);
+      });
+      
+      const stats = rates.length ? {
+        avgRate: Math.round(rates.reduce((sum, rate) => sum + rate, 0) / rates.length),
+        minRate: Math.min(...rates),
+        maxRate: Math.max(...rates),
+        vendorCount: rates.length
+      } : { avgRate: 0, minRate: 0, maxRate: 0, vendorCount: 0 };
+      
+      return {
+        vehicleType,
+        stats,
+        vendorRates: vendorRates[vehicleType],
+        priceTags: priceTagsByVehicle[vehicleType]
+      };
+    });
+    
+    // Sort vehicles based on sortConfig
+    vehicles.sort((a, b) => {
+      if (sortConfig.key === 'vehicle') {
+        return sortConfig.direction === 'asc' 
+          ? a.vehicleType.localeCompare(b.vehicleType)
+          : b.vehicleType.localeCompare(a.vehicleType);
+      } else if (sortConfig.key === 'rate') {
+        return sortConfig.direction === 'asc'
+          ? a.stats.avgRate - b.stats.avgRate
+          : b.stats.avgRate - a.stats.avgRate;
+      } else if (sortConfig.key === 'vendors') {
+        return sortConfig.direction === 'asc'
+          ? a.stats.vendorCount - b.stats.vendorCount
+          : b.stats.vendorCount - a.stats.vendorCount;
+      }
+      return 0;
+    });
+    
+    return { vehicles, vendorRates };
+  }, [filteredData, selectedVendors, sortConfig]);
 
-  const handleRouteToggle = (route) => {
-    setSelectedRoutes(prev => 
-      prev.includes(route) 
-        ? prev.filter(r => r !== route)
-        : [...prev, route]
-    );
+  // Calculate pagination
+  const paginatedVehicles = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return processedData.vehicles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [processedData.vehicles, currentPage]);
+
+  const totalPages = Math.ceil(processedData.vehicles.length / ITEMS_PER_PAGE);
+
+  // Handle route selection
+  const handleRouteChange = (event) => {
+    setSelectedRoute(event.target.value);
+    setSelectedVendors([]);
     setCurrentPage(1);
   };
 
-  const getPriceTagStyle = (tag) => {
-    switch (tag) {
-      case 'low': return { bgcolor: '#e8f5e9', color: '#2e7d32', borderColor: '#a5d6a7' };
-      case 'mid': return { bgcolor: '#fff8e1', color: '#f57f17', borderColor: '#ffe082' };
-      case 'high': return { bgcolor: '#ffebee', color: '#c62828', borderColor: '#ef9a9a' };
-      case 'single': return { bgcolor: '#fff', color: '#333', borderColor: '#ddd' };
-      default: return { bgcolor: '#f5f5f5', color: '#616161', borderColor: '#e0e0e0' };
+  // Handle vendor selection
+  const handleVendorChange = (event) => {
+    const value = event.target.value;
+    setSelectedVendors(typeof value === 'string' ? value.split(',') : value);
+  };
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setVehicleFilter('all');
+    setSelectedVendors([]);
+    setSortConfig({ key: 'vehicle', direction: 'asc' });
+    setCurrentPage(1);
+  };
+
+  // Get price tag color
+  const getPriceTagColor = (priceTag) => {
+    switch (priceTag) {
+      case 'low':
+        return theme.palette.success.main;
+      case 'mid':
+        return theme.palette.warning.main;
+      case 'high':
+        return theme.palette.error.main;
+      default:
+        return theme.palette.info.main;
     }
   };
 
-  const getPriceIcon = (tag) => {
-    switch (tag) {
-      case 'low': return <TrendingDownIcon fontSize="small" />;
-      case 'high': return <TrendingUpIcon fontSize="small" />;
-      default: return <RemoveIcon fontSize="small" />;
+  // Get price tag icon
+  const getPriceTagIcon = (priceTag) => {
+    switch (priceTag) {
+      case 'low':
+        return <TrendingDownIcon fontSize="small" />;
+      case 'high':
+        return <TrendingUpIcon fontSize="small" />;
+      default:
+        return <RemoveIcon fontSize="small" />;
     }
+  };
+  
+  // Get vehicle icon
+  const getVehicleIcon = (vehicleType) => {
+    if (vehicleType.toLowerCase().includes('truck')) {
+      return <LocalShippingIcon />;
+    }
+    return <DirectionsCarIcon />;
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress size={48} sx={{ mb: 2 }} />
-          <Typography color="text.secondary">Loading vendor data...</Typography>
-        </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <CircularProgress />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <Alert severity="error" sx={{ maxWidth: 500 }}>
-          <Typography variant="h6" gutterBottom>Error</Typography>
-          <Typography variant="body2">{error}</Typography>
-        </Alert>
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">{error}</Alert>
       </Box>
     );
   }
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Typography variant="h4" fontWeight={700} mb={1}>
+      <Typography variant="h4" gutterBottom>
         Vendor Rate Lookup
       </Typography>
-      <Typography variant="body1" color="text.secondary" mb={3}>
-        Search and compare vendor rates across different routes and identify the best pricing opportunities for your routes.
-      </Typography>
-
-      {/* Controls */}
+      
+      {/* Route Selection */}
       <Box sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          placeholder="Search vendors, origins, destinations or vehicle types..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            )
-          }}
-          variant="outlined"
-          size="small"
-          sx={{ mb: 2 }}
-        />
-        
-        {/* Filter Toggle */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button
-            variant="outlined"
-            startIcon={<FilterListIcon />}
-            onClick={() => setShowFilters(!showFilters)}
-            size="small"
+        <FormControl fullWidth size="small">
+          <InputLabel>Select Route</InputLabel>
+          <Select
+            value={selectedRoute}
+            onChange={handleRouteChange}
+            label="Select Route"
           >
-            Filters
-          </Button>
-          
-          {/* Stats Toggle */}
-          <Button
-            startIcon={showStats ? <VisibilityOffIcon /> : <VisibilityIcon />}
-            onClick={() => setShowStats(!showStats)}
-            size="small"
-            color="primary"
-          >
-            {showStats ? 'Hide Stats' : 'Show Stats'}
-          </Button>
-        </Box>
+            {uniqueRoutes.length > 0 ? (
+              uniqueRoutes.map(route => (
+                <MenuItem key={route} value={route}>{route}</MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>No routes available</MenuItem>
+            )}
+          </Select>
+        </FormControl>
       </Box>
-
-      {/* Filters */}
+      
+      {/* Vendor Selection */}
+      {selectedRoute && (
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="vendor-select-label">Select Vendors to Compare</InputLabel>
+            <Select
+              labelId="vendor-select-label"
+              multiple
+              value={selectedVendors}
+              onChange={handleVendorChange}
+              input={<OutlinedInput label="Select Vendors to Compare" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} size="small" />
+                  ))}
+                </Box>
+              )}
+            >
+              {vendorsForSelectedRoute && vendorsForSelectedRoute.length > 0 ? (
+                vendorsForSelectedRoute.map((vendor) => (
+                  <MenuItem key={vendor} value={vendor}>
+                    <Checkbox checked={selectedVendors.indexOf(vendor) > -1} />
+                    <ListItemText primary={vendor} />
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>
+                  <ListItemText primary="No vendors available for this route" />
+                </MenuItem>
+              )}
+            </Select>
+          </FormControl>
+        </Box>
+      )}
+      
+      {/* Filters and Reset */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Button
+          startIcon={<FilterListIcon />}
+          onClick={() => setShowFilters(!showFilters)}
+          size="small"
+        >
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
+        </Button>
+        
+        <Button
+          startIcon={<CloseIcon />}
+          onClick={handleResetFilters}
+          size="small"
+        >
+          Reset All
+        </Button>
+      </Box>
+      
+      {/* Additional Filters */}
       {showFilters && (
-        <Paper sx={{ p: 2, mb: 3 }} elevation={1}>
+        <Paper sx={{ p: 2, mb: 3 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12}>
               <FormControl fullWidth size="small">
                 <InputLabel>Vehicle Type</InputLabel>
                 <Select
@@ -310,205 +438,177 @@ const VendorLookup = () => {
                 </Select>
               </FormControl>
             </Grid>
-            
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Origin</InputLabel>
-                <Select
-                  value={originFilter}
-                  onChange={(e) => setOriginFilter(e.target.value)}
-                  label="Origin"
-                >
-                  <MenuItem value="all">All Origins</MenuItem>
-                  {uniqueOrigins.map(origin => (
-                    <MenuItem key={origin} value={origin}>{origin}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
           </Grid>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-            <IconButton
-              size="small"
-              onClick={() => setShowFilters(false)}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
         </Paper>
       )}
-
-      {/* Routes Selection */}
-      <Card sx={{ mb: 3 }} elevation={1}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Select Routes to Compare</Typography>
-            <Button
-              startIcon={showStats ? <VisibilityOffIcon /> : <VisibilityIcon />}
-              onClick={() => setShowStats(!showStats)}
-              size="small"
-              color="primary"
-            >
-              {showStats ? 'Hide Stats' : 'Show Stats'}
-            </Button>
-          </Box>
-          
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {uniqueRoutes.map(route => (
-              <Chip
-                key={route}
-                label={route}
-                onClick={() => handleRouteToggle(route)}
-                color={selectedRoutes.includes(route) ? "primary" : "default"}
-                variant={selectedRoutes.includes(route) ? "filled" : "outlined"}
-                size="small"
-                clickable
-              />
-            ))}
-          </Box>    
-        </CardContent>
-      </Card>
-
-      {/* Route Statistics */}
-      {showStats && selectedRoutes.length > 0 && (
-        <Box sx={{ mt: 3 }}>
-          <Grid container spacing={2}>
-            {selectedRoutes.map(route => {
-              const stats = routeStats[route];
-              if (!stats) return null;
-              
-              return (
-                <Grid item xs={12} sm={6} md={4} key={route}>
-                  <Paper sx={{ p: 2, bgcolor: '#f5f5f5' }} variant="outlined">
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {route}
-                    </Typography>
-                    <Typography variant="h6" fontWeight="bold" sx={{ my: 0.5 }}>
-                      ₹{stats.avgRate}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {stats.vendorCount} vendors · ₹{stats.minRate} to ₹{stats.maxRate}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Box>
-      )}
-
-      {/* Price Legend */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-        {[
-          { key: 'low', label: 'Lowest Price', icon: TrendingDown },
-          { key: 'mid', label: 'Mid Price', icon: RemoveIcon },
-          { key: 'high', label: 'Highest Price', icon: TrendingUp }
-        ].map(({ key, label, icon: Icon }) => (
-          <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 16, height: 16, borderRadius: 1, ...getPriceTagStyle(key) }} />
-            <Typography variant="body2" color="text.secondary">{label}</Typography>
-          </Box>
-        ))}
-      </Box>
-
-      {/* Comparison Table */}
-      <TableContainer component={Paper} sx={{ mb: 3, overflow: 'auto' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ position: 'sticky', left: 0, bgcolor: '#f5f5f5', zIndex: 3, fontWeight: 'bold' }}>
-                Vendor
-              </TableCell>
-              {selectedRoutes.map(route => (
-                <TableCell 
-                  key={route} 
-                  align="center"
-                  sx={{ fontWeight: 'bold', minWidth: 120 }}
-                >
-                  {route}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedData.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={selectedRoutes.length + 1} align="center">
-                  {selectedRoutes.length === 0 ? 'Please select routes to compare' : 'No matching vendors found'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedData.map((vendor, index) => (
-                <TableRow key={vendor.vendor} hover>
-                  <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'white', zIndex: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: theme.palette.primary.light, 
-                          color: theme.palette.primary.contrastText,
-                          width: 32, 
-                          height: 32,
-                          mr: 1
-                        }}
-                      >
-                        {vendor.vendor.charAt(0)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium">
-                          {vendor.vendor}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {vendor.totalRoutes} routes
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  {selectedRoutes.map(route => {
-                    const routeData = vendor.routeData[route];
-                    return (
-                      <TableCell key={route} align="center">
-                        {routeData ? (
-                          <Chip
-                            size="small"
-                            label={`₹${routeData.rate}`}
-                            icon={getPriceIcon(routeData.tag)}
-                            sx={{
-                              ...getPriceTagStyle(routeData.tag),
-                              '& .MuiChip-icon': { color: 'inherit' }
-                            }}
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.disabled">-</Typography>
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
       
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Pagination
-            count={totalPages}
-            page={currentPage}
-            onChange={(e, page) => setCurrentPage(page)}
-            color="primary"
-            showFirstButton
-            showLastButton
-          />
-        </Box>
+      {/* Price Tag Legend */}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+        <Typography variant="subtitle2">Price Tags:</Typography>
+        <Chip 
+          icon={<TrendingDownIcon />} 
+          label="Lowest Price" 
+          size="small" 
+          sx={{ bgcolor: theme.palette.success.light, color: theme.palette.success.dark }}
+        />
+        <Chip 
+          icon={<RemoveIcon />} 
+          label="Mid Price" 
+          size="small" 
+          sx={{ bgcolor: theme.palette.warning.light, color: theme.palette.warning.dark }}
+        />
+        <Chip 
+          icon={<TrendingUpIcon />} 
+          label="Highest Price" 
+          size="small" 
+          sx={{ bgcolor: theme.palette.error.light, color: theme.palette.error.dark }}
+        />
+      </Box>
+      
+      {/* Matrix Display - Vehicle Types in Rows, Vendors in Columns */}
+      {selectedRoute ? (
+        selectedVendors.length > 0 ? (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Vehicle Rates Comparison for {selectedRoute}
+            </Typography>
+            
+            <Paper sx={{ width: '100%', overflow: 'auto', mb: 3 }}>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold', minWidth: 150 }}>
+                        Vehicle Type
+                      </TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold', minWidth: 120 }}>
+                        Best Rate
+                      </TableCell>
+                      {selectedVendors.map(vendor => (
+                        <TableCell 
+                          key={vendor} 
+                          align="center"
+                          sx={{ fontWeight: 'bold', minWidth: 120 }}
+                        >
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <Avatar 
+                              sx={{ 
+                                width: 30, 
+                                height: 30, 
+                                fontSize: '0.875rem',
+                                mb: 0.5,
+                                bgcolor: theme.palette.primary.main
+                              }}
+                            >
+                              {vendor.charAt(0)}
+                            </Avatar>
+                            <Typography variant="body2" noWrap>
+                              {vendor}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedVehicles.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={selectedVendors.length + 2} align="center">
+                          No vehicle data available for the selected filters
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedVehicles.map(vehicle => (
+                        <TableRow key={vehicle.vehicleType}>
+                          <TableCell sx={{ fontWeight: 'bold' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar sx={{ bgcolor: theme.palette.grey[200], mr: 1, width: 28, height: 28 }}>
+                                {getVehicleIcon(vehicle.vehicleType)}
+                              </Avatar>
+                              {vehicle.vehicleType}
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            {vehicle.stats.vendorCount > 0 ? (
+                              <Chip 
+                                label={`₹${vehicle.stats.minRate}`} 
+                                size="small" 
+                                icon={<TrendingDownIcon fontSize="small" />}
+                                sx={{
+                                  bgcolor: theme.palette.success.light,
+                                  color: theme.palette.success.dark,
+                                  fontWeight: 'bold',
+                                  border: `1px solid ${theme.palette.success.main}`,
+                                  '& .MuiChip-icon': { color: theme.palette.success.dark }
+                                }}
+                              />
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">N/A</Typography>
+                            )}
+                          </TableCell>
+                          
+                          {selectedVendors.map(vendor => {
+                            const rate = vehicle.vendorRates[vendor];
+                            const priceTag = vehicle.priceTags[vendor];
+                            
+                            return (
+                              <TableCell key={vendor} align="center">
+                                {rate !== null ? (
+                                  <Chip
+                                    size="small"
+                                    label={`₹${rate}`}
+                                    icon={getPriceTagIcon(priceTag)}
+                                    sx={{
+                                      bgcolor: 
+                                        priceTag === 'low' ? theme.palette.success.light :
+                                        priceTag === 'high' ? theme.palette.error.light :
+                                        priceTag === 'mid' ? theme.palette.warning.light :
+                                        theme.palette.grey[200],
+                                      color: 
+                                        priceTag === 'low' ? theme.palette.success.dark :
+                                        priceTag === 'high' ? theme.palette.error.dark :
+                                        priceTag === 'mid' ? theme.palette.warning.dark :
+                                        theme.palette.grey[800],
+                                      '& .MuiChip-icon': { color: 'inherit' }
+                                    }}
+                                  />
+                                ) : (
+                                  <Typography variant="body2" color="text.secondary">N/A</Typography>
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                          
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Pagination 
+                  count={totalPages} 
+                  page={currentPage} 
+                  onChange={(e, page) => setCurrentPage(page)} 
+                  color="primary"
+                />
+              </Box>
+            )}
+          </>
+        ) : (
+          <Alert severity="info">
+            Please select one or more vendors to compare rates
+          </Alert>
+        )
+      ) : (
+        <Alert severity="info">
+          Please select a route to view vehicle types and vendor rates
+        </Alert>
       )}
-
-      {/* Footer Info */}
-      <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
-        Showing {paginatedData.length} of {comparisonData.length} vendors
-      </Typography>
     </Box>
   );
 };

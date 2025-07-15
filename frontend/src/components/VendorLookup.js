@@ -18,14 +18,17 @@ import ImportExportIcon from '@mui/icons-material/ImportExport';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
 
-// API URL configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+// API URL configuration for both development and production environments
+const API_URL = process.env.REACT_APP_API_URL || '/api';
+console.log(`Using API URL: ${API_URL}`);
 
 // Function to fetch vendor rates from backend
 const fetchVendorRates = async () => {
   try {
-    console.log(`Fetching vendor rates from: ${API_BASE_URL}/vendor-rates`);
-    const response = await axios.get(`${API_BASE_URL}/vendor-rates`);
+    console.log(`Fetching vendor rates from: ${API_URL}/vendor-rates`);
+    const response = await axios.get(`${API_URL}/vendor-rates`, {
+      timeout: 8000 // Add timeout to prevent hanging requests
+    });
     console.log('API Response:', response.data);
     return response.data;
   } catch (error) {
@@ -53,18 +56,23 @@ const VendorLookup = () => {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError(null); // Clear any previous errors
         const response = await fetchVendorRates();
         
-        if (response && response.rates && Array.isArray(response.rates)) {
+        if (response && response.success && response.rates && Array.isArray(response.rates)) {
           console.log('Received vendor rates:', response.rates.length);
+          setAllVendorRates(response.rates);
+        } else if (response && response.rates && Array.isArray(response.rates)) {
+          // Some APIs might not include a success flag but still return valid data
+          console.log('Received vendor rates without success flag:', response.rates.length);
           setAllVendorRates(response.rates);
         } else {
           console.error('Invalid API response format:', response);
-          setError('Failed to load vendor rates - invalid data format');
+          setError('Failed to load vendor rates - invalid data format. Please try again later.');
         }
       } catch (err) {
         console.error('Error in loadData:', err);
-        setError('Error loading data: ' + err.message);
+        setError(`Error loading data: ${err.message}. Please check your network connection and try again.`);
       } finally {
         setLoading(false);
       }

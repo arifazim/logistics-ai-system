@@ -19,7 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
 
 // API URL configuration for both development and production environments
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 console.log(`Using API URL: ${API_URL}`);
 
 // Function to fetch vendor rates from backend

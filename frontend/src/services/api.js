@@ -2,6 +2,19 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
+// Configure axios defaults for all requests
+axios.defaults.timeout = 15000; // 15 seconds timeout
+
+// Cache for API responses to reduce duplicate requests
+const apiCache = {
+  vendorRates: null,
+  vendorRatesTimestamp: null,
+  pendingVendorRatesPromise: null
+};
+
+// Cache expiration time (5 minutes)
+const CACHE_EXPIRY = 5 * 60 * 1000;
+
 export const searchQuotations = async (params) => {
   // Add max_results parameter to get all available results
   const searchParams = {
@@ -15,4 +28,57 @@ export const searchQuotations = async (params) => {
 export const getDashboardAnalytics = async () => {
   const response = await axios.get(`${API_BASE_URL}/analytics/dashboard`);
   return response.data;
+};
+
+// Cached and throttled vendor rates API
+export const getVendorRates = async () => {
+  // Check if we have a valid cached response
+  const now = Date.now();
+  if (apiCache.vendorRates && apiCache.vendorRatesTimestamp && 
+      (now - apiCache.vendorRatesTimestamp < CACHE_EXPIRY)) {
+    console.log('Using cached vendor rates data');
+    return apiCache.vendorRates;
+  }
+  
+  // If there's already a pending request, return that promise
+  if (apiCache.pendingVendorRatesPromise) {
+    console.log('Reusing pending vendor rates request');
+    return apiCache.pendingVendorRatesPromise;
+  }
+  
+  // Create a new request promise
+  console.log(`Fetching vendor rates from: ${API_BASE_URL}/vendor-rates`);
+  apiCache.pendingVendorRatesPromise = new Promise(async (resolve) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/vendor-rates`, {
+        timeout: 30000, // 30 seconds timeout for this large dataset
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      console.log('Vendor rates API Response:', response.data);
+      
+      // Cache the successful response
+      apiCache.vendorRates = response.data;
+      apiCache.vendorRatesTimestamp = Date.now();
+      resolve(response.data);
+    } catch (error) {
+      console.error('Error fetching vendor rates:', error);
+      const errorResponse = { 
+        success: false, 
+        rates: [], 
+        error: error.message 
+      };
+      resolve(errorResponse); // Resolve with error response rather than rejecting
+    } finally {
+      // Clear the pending promise after a short delay
+      setTimeout(() => {
+        apiCache.pendingVendorRatesPromise = null;
+      }, 1000);
+    }
+  });
+  
+  return apiCache.pendingVendorRatesPromise;
 };

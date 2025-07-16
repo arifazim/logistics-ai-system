@@ -746,6 +746,7 @@ const VendorLookup = () => {
                           '& th': { fontWeight: 600 }
                         }}>
                           <TableCell>Vehicle Type</TableCell>
+                          <TableCell>Best Rate</TableCell>
                           {vendorsForSelectedRoute.map(vendor => (
                             <TableCell key={vendor} align="right">{vendor}</TableCell>
                           ))}
@@ -753,42 +754,67 @@ const VendorLookup = () => {
                       </TableHead>
                       <TableBody>
                         {processedData.vehicles.length > 0 ? (
-                          processedData.vehicles.map(vehicle => (
-                            <TableRow key={vehicle} sx={{ 
-                              '&:nth-of-type(odd)': { bgcolor: alpha(theme.palette.primary.main, 0.01) },
-                              '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
-                              transition: 'background-color 0.2s'
-                            }}>
-                              <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
-                                {vehicle}
-                              </TableCell>
-                              {vendorsForSelectedRoute.map(vendor => {
-                                const rate = processedData.vendorRates[vehicle]?.[vendor];
-                                const priceTag = getPriceTag(rate, vendorsForSelectedRoute, vehicle, processedData.vendorRates);
-                                return (
-                                  <TableCell 
-                                    key={`${vehicle}-${vendor}`} 
-                                    align="right"
-                                    sx={{
-                                      fontWeight: 500,
-                                      color: rate ? priceTagColors[priceTag].color : 'text.disabled',
-                                      bgcolor: rate ? alpha(priceTagColors[priceTag].bgColor, 0.1) : 'transparent'
-                                    }}
-                                  >
-                                    {rate ? (
-                                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
-                                        <LocalOfferIcon sx={{ fontSize: '0.9rem', color: priceTagColors[priceTag].color }} />
-                                        ₹{rate.toLocaleString()}
-                                      </Box>
-                                    ) : 'N/A'}
-                                  </TableCell>
-                                );
-                              })}
-                            </TableRow>
-                          ))
+                          processedData.vehicles.map(vehicle => {
+                            // Compute best (lowest) and highest rate for this vehicle type
+                            const rates = vendorsForSelectedRoute.map(vendor => processedData.vendorRates[vehicle]?.[vendor]).filter(r => typeof r === 'number');
+                            const minRate = rates.length ? Math.min(...rates) : null;
+                            const maxRate = rates.length ? Math.max(...rates) : null;
+                            const percentSavings = (minRate !== null && maxRate && maxRate > 0 && minRate !== maxRate)
+                              ? (((maxRate - minRate) / maxRate) * 100).toFixed(1)
+                              : null;
+                            return (
+                              <TableRow key={vehicle} sx={{ 
+                                '&:nth-of-type(odd)': { bgcolor: alpha(theme.palette.primary.main, 0.01) },
+                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
+                                transition: 'background-color 0.2s'
+                              }}>
+                                <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
+                                  {vehicle}
+                                </TableCell>
+                                <TableCell
+                                  sx={{
+                                    bgcolor: minRate !== null ? '#ffb74d' : 'transparent', // orange
+                                    color: minRate !== null ? '#1b5e20' : 'inherit', // dark green
+                                    fontWeight: 700,
+                                    fontSize: '1rem',
+                                    textAlign: 'center',
+                                    borderRight: '2px solid ' + alpha(theme.palette.primary.main, 0.08)
+                                  }}
+                                >
+                                  {minRate !== null ? (
+                                    <>
+                                      ₹{minRate.toLocaleString()} {percentSavings ? <span style={{ fontWeight: 600, fontSize: '0.95em' }}>({percentSavings}% savings)</span> : null}
+                                    </>
+                                  ) : 'N/A'}
+                                </TableCell>
+                                {vendorsForSelectedRoute.map(vendor => {
+                                  const rate = processedData.vendorRates[vehicle]?.[vendor];
+                                  const priceTag = getPriceTag(rate, vendorsForSelectedRoute, vehicle, processedData.vendorRates);
+                                  return (
+                                    <TableCell 
+                                      key={`${vehicle}-${vendor}`} 
+                                      align="right"
+                                      sx={{
+                                        fontWeight: 500,
+                                        color: rate ? priceTagColors[priceTag].color : 'text.disabled',
+                                        bgcolor: rate ? alpha(priceTagColors[priceTag].bgColor, 0.1) : 'transparent'
+                                      }}
+                                    >
+                                      {rate ? (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
+                                          <LocalOfferIcon sx={{ fontSize: '0.9rem', color: priceTagColors[priceTag].color }} />
+                                          ₹{rate.toLocaleString()}
+                                        </Box>
+                                      ) : 'N/A'}
+                                    </TableCell>
+                                  );
+                                })}
+                              </TableRow>
+                            );
+                          })
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={vendorsForSelectedRoute.length + 1} align="center" sx={{ py: 3 }}>
+                            <TableCell colSpan={vendorsForSelectedRoute.length + 2} align="center" sx={{ py: 3 }}>
                               <Typography color="text.secondary">
                                 No data available for the selected filters
                               </Typography>

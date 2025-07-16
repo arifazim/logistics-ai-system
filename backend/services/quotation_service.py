@@ -79,11 +79,8 @@ class QuotationService:
                 matched_routes = matched_routes[
                     matched_routes['vehicle_type'].str.lower() == vehicle_type.lower()
                 ]
-
-            # Apply max_results limit only if specified and reasonable
-            if max_results and max_results < 10000:  # Allow up to 10,000 results
+            if max_results and max_results < 10000:
                 matched_routes = matched_routes.head(max_results)
-
             # Build output
             for _, row in matched_routes.iterrows():
                 filtered_routes.append({
@@ -96,17 +93,11 @@ class QuotationService:
                     'receiver_name': row.get('receiver_name', ''),
                     'vehicle_no': row.get('vehicle_no', '')
                 })
-
-            # Filter out entries with empty or zero rates
             filtered_routes = [r for r in filtered_routes if r['rate'] and r['rate'] > 0]
-
             if not filtered_routes:
                 return {'max_rate': None, 'other_rates': []}
-
-            # Find the entry with the maximum rate
             max_rate_entry = max(filtered_routes, key=lambda x: x['rate'])
             other_rates = [r for r in filtered_routes if r != max_rate_entry]
-
             return {
                 'max_rate': max_rate_entry,
                 'other_rates': other_rates,

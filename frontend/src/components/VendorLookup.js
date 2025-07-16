@@ -131,8 +131,9 @@ const VendorLookup = () => {
   const [error, setError] = useState(null);
   
   // Selection state
-  const [selectedRoute, setSelectedRoute] = useState('');
-  const [selectedVendors, setSelectedVendors] = useState([]);
+  const [selectedOrigin, setSelectedOrigin] = useState('');
+  const [selectedArea, setSelectedArea] = useState('');
+  const [selectedVendor, setSelectedVendor] = useState('');
   const [vehicleFilter, setVehicleFilter] = useState('all');
   
   // UI state
@@ -210,46 +211,32 @@ const VendorLookup = () => {
 
   // Get vendors for selected route
   const vendorsForSelectedRoute = useMemo(() => {
-    if (!selectedRoute || !vendorsByRoute[selectedRoute]) return [];
-    return Array.from(vendorsByRoute[selectedRoute]).sort();
-  }, [selectedRoute, vendorsByRoute]);
+    if (!selectedOrigin || !vendorsByRoute[`${selectedOrigin} → ${selectedArea}`]) return [];
+    return Array.from(vendorsByRoute[`${selectedOrigin} → ${selectedArea}`]).sort();
+  }, [selectedOrigin, selectedArea, vendorsByRoute]);
 
-  // Filter data by selected route
+  // Unique From-Origins
+  const origins = useMemo(() => {
+    return [...new Set(allVendorRates.map(r => r.from_origin).filter(Boolean))].sort();
+  }, [allVendorRates]);
+
+  // Areas filtered by selectedOrigin
+  const areas = useMemo(() => {
+    if (!selectedOrigin) return [];
+    return [...new Set(allVendorRates.filter(r => r.from_origin === selectedOrigin).map(r => r.area).filter(Boolean))].sort();
+  }, [allVendorRates, selectedOrigin]);
+
+  // Vendors filtered by selectedOrigin and selectedArea
+  const vendors = useMemo(() => {
+    if (!selectedOrigin || !selectedArea) return [];
+    return [...new Set(allVendorRates.filter(r => r.from_origin === selectedOrigin && r.area === selectedArea).map(r => r.vendor_name).filter(Boolean))].sort();
+  }, [allVendorRates, selectedOrigin, selectedArea]);
+
+  // Filtered data for matrix display
   const filteredData = useMemo(() => {
-    if (!selectedRoute) return [];
-    
-    try {
-      // Parse the selected route
-      const [origin, destination] = selectedRoute.split(' → ');
-      
-      if (!origin || !destination) {
-        console.error('Invalid route format:', selectedRoute);
-        return [];
-      }
-      
-      return allVendorRates.filter(rate => {
-        // Match the selected route
-        if (rate.from_origin !== origin) {
-          return false;
-        }
-        
-        // Check destination - using area field
-        if (rate.area !== destination) {
-          return false;
-        }
-        
-        // Apply vehicle type filter if needed
-        if (vehicleFilter !== 'all' && rate.vehicle_type !== vehicleFilter) {
-          return false;
-        }
-        
-        return true;
-      });
-    } catch (error) {
-      console.error('Error filtering data:', error);
-      return [];
-    }
-  }, [allVendorRates, selectedRoute, vehicleFilter]);
+    if (!selectedOrigin || !selectedArea) return [];
+    return allVendorRates.filter(r => r.from_origin === selectedOrigin && r.area === selectedArea && (vehicleFilter === 'all' || r.vehicle_type === vehicleFilter) && (!selectedVendor || r.vendor_name === selectedVendor));
+  }, [allVendorRates, selectedOrigin, selectedArea, vehicleFilter, selectedVendor]);
 
   // Process data for matrix display (vehicle types in rows, vendors in columns)
   const processedData = useMemo(() => {
@@ -286,24 +273,10 @@ const VendorLookup = () => {
   // No need for pagination with simplified view
   const totalPages = 1;
 
-  // Handle route change
-  const handleRouteChange = (event) => {
-    const newRoute = event.target.value;
-    console.log('Selected route:', newRoute);
-    setSelectedRoute(newRoute);
-    // Reset vehicle filter when route changes
-    setVehicleFilter('all');
-  };
-  
-  // Handle vendor selection change
-  const handleVendorChange = (event) => {
-    setSelectedVendors(event.target.value);
-  };
-
   // Reset filters
   const handleResetFilters = () => {
     setVehicleFilter('all');
-    setSelectedVendors([]);
+    setSelectedVendor('');
     setSortConfig({ key: 'vehicle', direction: 'asc' });
     setCurrentPage(1);
   };
@@ -540,87 +513,59 @@ const VendorLookup = () => {
             Compare vendor rates across different routes and vehicle types
           </Typography>
           
-          {/* Route Selection */}
+          {/* Dependent Selects: From-Origin, Area, Vendor */}
           <GradientCard sx={{ mb: 3, overflow: 'hidden' }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+                {/* From-Origin Select */}
                 <FormControl fullWidth>
-                  <InputLabel>Select Route</InputLabel>
+                  <InputLabel>From-Origin</InputLabel>
                   <Select
-                    value={selectedRoute}
-                    onChange={handleRouteChange}
-                    label="Select Route"
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <CompareArrowsIcon color="primary" />
-                      </InputAdornment>
-                    }
-                    sx={{ 
-                      borderRadius: 2,
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.primary.light,
-                      },
+                    value={selectedOrigin}
+                    onChange={e => {
+                      setSelectedOrigin(e.target.value);
+                      setSelectedArea('');
+                      setSelectedVendor('');
                     }}
+                    label="From-Origin"
                   >
-                    {uniqueRoutes.length > 0 ? (
-                      uniqueRoutes.map(route => (
-                        <MenuItem key={route} value={route}>{route}</MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem disabled>No routes available</MenuItem>
-                    )}
+                    <MenuItem value="">Select Origin</MenuItem>
+                    {origins.map(origin => (
+                      <MenuItem key={origin} value={origin}>{origin}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
-                
-                {/* Vendor Selection */}
-                {selectedRoute && (
-                  <FormControl fullWidth>
-                    <InputLabel id="vendor-select-label">Select Vendors to Compare</InputLabel>
-                    <Select
-                      labelId="vendor-select-label"
-                      multiple
-                      value={selectedVendors}
-                      onChange={handleVendorChange}
-                      input={<OutlinedInput label="Select Vendors to Compare" />}
-                      renderValue={(selected) => (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {selected.map((value) => (
-                            <Chip 
-                              key={value} 
-                              label={value} 
-                              size="small"
-                              sx={{
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                color: theme.palette.primary.main,
-                                fontWeight: 500,
-                                '&:hover': { boxShadow: theme.shadows[2] }
-                              }}
-                            />
-                          ))}
-                        </Box>
-                      )}
-                      sx={{ 
-                        borderRadius: 2,
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: theme.palette.primary.light,
-                        },
-                      }}
-                    >
-                      {vendorsForSelectedRoute && vendorsForSelectedRoute.length > 0 ? (
-                        vendorsForSelectedRoute.map((vendor) => (
-                          <MenuItem key={vendor} value={vendor}>
-                            <Checkbox checked={selectedVendors.indexOf(vendor) > -1} />
-                            <ListItemText primary={vendor} />
-                          </MenuItem>
-                        ))
-                      ) : (
-                        <MenuItem disabled>
-                          <ListItemText primary="No vendors available for this route" />
-                        </MenuItem>
-                      )}
-                    </Select>
-                  </FormControl>
-                )}
+                {/* Area Select */}
+                <FormControl fullWidth disabled={!selectedOrigin}>
+                  <InputLabel>Area</InputLabel>
+                  <Select
+                    value={selectedArea}
+                    onChange={e => {
+                      setSelectedArea(e.target.value);
+                      setSelectedVendor('');
+                    }}
+                    label="Area"
+                  >
+                    <MenuItem value="">Select Area</MenuItem>
+                    {areas.map(area => (
+                      <MenuItem key={area} value={area}>{area}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {/* Vendor Select */}
+                <FormControl fullWidth disabled={!selectedArea}>
+                  <InputLabel>Vendor</InputLabel>
+                  <Select
+                    value={selectedVendor}
+                    onChange={e => setSelectedVendor(e.target.value)}
+                    label="Vendor"
+                  >
+                    <MenuItem value="">All Vendors</MenuItem>
+                    {vendors.map(vendor => (
+                      <MenuItem key={vendor} value={vendor}>{vendor}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
             </CardContent>
           </GradientCard>
@@ -732,7 +677,7 @@ const VendorLookup = () => {
           </Box>
           
           {/* Matrix Display - Vehicle Types in Rows, Vendors in Columns */}
-          {selectedRoute ? (
+          {selectedOrigin && selectedArea ? (
             <Fade in={true} timeout={800}>
               <GradientCard sx={{ mt: 3, overflow: 'hidden' }}>
                 <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
@@ -746,7 +691,7 @@ const VendorLookup = () => {
                     gap: 2
                   }}>
                     <Typography variant="h6" fontWeight={600}>
-                      Rate Comparison for {selectedRoute}
+                      Rate Comparison for {selectedOrigin} → {selectedArea}
                     </Typography>
                     
                     <Box sx={{ 

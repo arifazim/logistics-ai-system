@@ -6,6 +6,7 @@ import QuotationEngine from './components/QuotationEngine';
 import BulkQuotation from './components/BulkQuotation';
 import VendorLookup from './components/VendorLookup';
 import RouteLookup from './components/RouteLookup';
+import SingleVendorAnalysis from './components/SingleVendorAnalysis';
 
 function App() {
   React.useEffect(() => {
@@ -110,6 +111,7 @@ function App() {
           <Route path="/quotations" element={<QuotationEngine />} />
           <Route path="/bulk-quotation" element={<BulkQuotation />} />
           <Route path="/vendor-lookup" element={<VendorLookup />} />
+          <Route path="/vendor-analysis" element={<SingleVendorAnalysis />} />
           <Route path="/route-lookup" element={<RouteLookup />} />
         </Routes>
       </div>

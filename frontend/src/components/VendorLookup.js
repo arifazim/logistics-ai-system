@@ -411,7 +411,7 @@ const VendorLookup = () => {
             fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
           }}
         >
-          Vendor Rate Lookup
+          Route by Vendors
         </Typography>
         <Typography 
           variant="subtitle1" 
@@ -445,7 +445,7 @@ const VendorLookup = () => {
             fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
           }}
         >
-          Vendor Rate Lookup
+          Route by Vendors
         </Typography>
         
         <GradientCard sx={{ mt: 3, mb: 4 }}>
@@ -501,7 +501,7 @@ const VendorLookup = () => {
               fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
             }}
           >
-            Vendor Rate Lookup
+            Route by Vendors
           </Typography>
           <Typography 
             variant="subtitle1" 
@@ -759,6 +759,12 @@ const VendorLookup = () => {
                             const rates = vendorsForSelectedRoute.map(vendor => processedData.vendorRates[vehicle]?.[vendor]).filter(r => typeof r === 'number');
                             const minRate = rates.length ? Math.min(...rates) : null;
                             const maxRate = rates.length ? Math.max(...rates) : null;
+                            
+                            // Find the vendor with the minimum rate
+                            const minRateVendor = minRate !== null 
+                              ? vendorsForSelectedRoute.find(vendor => processedData.vendorRates[vehicle]?.[vendor] === minRate)
+                              : null;
+                            
                             const percentSavings = (minRate !== null && maxRate && maxRate > 0 && minRate !== maxRate)
                               ? (((maxRate - minRate) / maxRate) * 100).toFixed(1)
                               : null;
@@ -783,7 +789,7 @@ const VendorLookup = () => {
                                 >
                                   {minRate !== null ? (
                                     <>
-                                      ₹{minRate.toLocaleString()} {percentSavings ? <span style={{ fontWeight: 600, fontSize: '0.95em' }}>({percentSavings}% savings)</span> : null}
+                                      ₹{minRate.toLocaleString()} {percentSavings && minRateVendor ? <span style={{ fontWeight: 600, fontSize: '0.95em' }}>(+{percentSavings}% by {minRateVendor})</span> : null}
                                     </>
                                   ) : 'N/A'}
                                 </TableCell>

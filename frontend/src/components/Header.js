@@ -3,19 +3,19 @@ import {
   AppBar, 
   Toolbar, 
   Typography, 
-  Button, 
   Box, 
-  Container, 
+  Container,
   IconButton, 
   Drawer, 
   List, 
   ListItem, 
   ListItemIcon, 
-  ListItemText, 
+  ListItemText,
   Divider,
   useMediaQuery,
   useTheme,
-  Fade,
+  styled,
+  alpha,
   Tooltip
 } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
@@ -25,8 +25,67 @@ import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import LocalShippingSharpIcon from '@mui/icons-material/LocalShippingSharp';
+import Groups2SharpIcon from '@mui/icons-material/Groups2Sharp';
+import ListAltIcon from '@mui/icons-material/ListAlt';         // For Quotation Builder
+import AltRouteIcon from '@mui/icons-material/AltRoute';       // For Route by Vendors
+import SummarizeIcon from '@mui/icons-material/Summarize';     // For Route Summary
+import ShowChartIcon from '@mui/icons-material/ShowChart';     // For Route Rates
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard'; // For Dashboard
+import BusinessIcon from '@mui/icons-material/Business';      // For Vendor Analysis
+
+// Styled components
+const NavIconButton = styled(IconButton)(({ theme, active }) => ({
+  color: 'white',
+  margin: theme.spacing(0, 1),
+  padding: theme.spacing(1.2),
+  position: 'relative',
+  transition: 'all 0.2s',
+  '&:after': active ? {
+    content: '""',
+    position: 'absolute',
+    width: '75%',
+    height: '3px',
+    bottom: '4px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: 'white',
+    borderRadius: '2px 2px 0 0',
+  } : {},
+  '&:hover': {
+    background: alpha(theme.palette.common.white, 0.15),
+    transform: 'translateY(-2px)',
+  },
+}));
+
+// Icon style configuration with unique colors for each navigation item
+const iconStyles = {
+  quotationBuilder: { 
+    color: '#FF6B6B', // Coral red
+    filter: 'drop-shadow(0 2px 5px rgba(255,107,107,0.5))'
+  },
+  routeByVendors: { 
+    color: '#48dbfb', // Sky blue
+    filter: 'drop-shadow(0 2px 5px rgba(72,219,251,0.5))'
+  },
+  routeSummary: { 
+    color: '#1dd1a1', // Mint green
+    filter: 'drop-shadow(0 2px 5px rgba(29,209,161,0.5))'
+  },
+  routeRates: { 
+    color: '#feca57', // Yellow
+    filter: 'drop-shadow(0 2px 5px rgba(254,202,87,0.5))'
+  },
+  dashboard: { 
+    color: '#a29bfe', // Lavender
+    filter: 'drop-shadow(0 2px 5px rgba(162,155,254,0.5))'
+  },
+  vendorAnalysis: { 
+    color: '#26de81', // Fresh green
+    filter: 'drop-shadow(0 2px 5px rgba(38,222,129,0.5))'
+  }
+};
 
 function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -38,6 +97,22 @@ function Header() {
     setMobileOpen(!mobileOpen);
   };
 
+  // other icons for navigation
+  // DescriptionIcon
+  // CompareArrowsIcon
+  // ReceiptLongIcon
+  // DashboardIcon  
+  const navigationItems = [
+    { text: 'Quotation Builder', icon: <ListAltIcon sx={iconStyles.quotationBuilder} fontSize="medium" />, path: '/bulk-quotation', styleKey: 'quotationBuilder' },
+    { text: 'Route by Vendors', icon: <AltRouteIcon sx={iconStyles.routeByVendors} fontSize="medium" />, path: '/vendor-lookup', styleKey: 'routeByVendors' },
+    { text: 'Vendor Analysis', icon: <Groups2SharpIcon sx={iconStyles.vendorAnalysis} fontSize="medium" />, path: '/vendor-analysis', styleKey: 'vendorAnalysis' },
+    { text: 'Route Summary', icon: <SummarizeIcon sx={iconStyles.routeSummary} fontSize="medium" />, path: '/quotations', styleKey: 'routeSummary' },
+    { text: 'Route Rates', icon: <LocalShippingSharpIcon sx={iconStyles.routeRates} fontSize="medium" />, path: '/route-lookup', styleKey: 'routeRates' },
+    { text: 'Dashboard', icon: <SpaceDashboardIcon sx={iconStyles.dashboard} fontSize="medium" />, path: '/dashboard', styleKey: 'dashboard' }
+  ];
+ 
+
+  // Mobile drawer content
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
       <Typography variant="h6" sx={{ my: 2 }}>
@@ -45,172 +120,159 @@ function Header() {
       </Typography>
       <Divider />
       <List>
-        <ListItem button component={Link} to="/bulk-quotation" selected={location.pathname === '/bulk-quotation'}>
-          <ListItemIcon>
-            <DescriptionIcon />
-          </ListItemIcon>
-          <ListItemText primary="Quotation Builder" />
-        </ListItem>
-        <ListItem button component={Link} to="/vendor-lookup" selected={location.pathname === '/vendor-lookup'}>
-          <ListItemIcon>
-            <CompareArrowsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Vendor" />
-        </ListItem>
-        <ListItem button component={Link} to="/quotations" selected={location.pathname === '/quotations'}>
-          <ListItemIcon>
-            <ReceiptLongIcon />
-          </ListItemIcon>
-          <ListItemText primary="Quotation" />
-        </ListItem>
-        <ListItem button component={Link} to="/route-lookup" selected={location.pathname === '/route-lookup'}>
-          <ListItemIcon>
-            <ReceiptLongIcon />
-          </ListItemIcon>
-          <ListItemText primary="Route" />
-        </ListItem>
-        <ListItem button component={Link} to="/dashboard" selected={location.pathname === '/dashboard'}>
-          <ListItemIcon>
-            <DashboardIcon />
-          </ListItemIcon>
-          <ListItemText primary="Dashboard" />
-        </ListItem>
+        {navigationItems.map((item) => (
+          <ListItem 
+            component={Link} 
+            to={item.path} 
+            key={item.path}
+            selected={location.pathname === item.path}
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              },
+              py: 1.5
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40, color: iconStyles[item.styleKey].color }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.text} 
+              primaryTypographyProps={{
+                fontWeight: location.pathname === item.path ? 600 : 400
+              }}
+            />
+          </ListItem>
+        ))}
       </List>
     </Box>
   );
 
   return (
-    <AppBar 
-      position="sticky" 
-      elevation={0} 
-      sx={{ 
-        mb: 4, 
-        background: 'linear-gradient(90deg, #1976d2 0%, #2196f3 100%)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-        backdropFilter: 'blur(8px)',
-      }}
-    >
-      <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ py: 1 }}>
-          {/* Logo and Brand */}
-          <Box display="flex" alignItems="center" gap={1}>
-            <img 
-              src={fnLogo} 
-              alt="FormulaNEXT Logo" 
-              style={{ 
-                height: isMobile ? 48 : 56, 
-                transition: 'height 0.3s ease',
-                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
-              }} 
-            />
-            <Box>
-              <Typography 
-                variant={isMobile ? "subtitle1" : "h6"} 
-                fontWeight={700} 
-                sx={{
-                  color: 'white',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  letterSpacing: '0.5px',
-                  lineHeight: 1.2
-                }}
-              >
-                FormulaNEXT Express
-              </Typography>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  color: 'rgba(255,255,255,0.8)',
-                  mt: 0.5
-                }}
-              >
-                <LocalShippingIcon fontSize="small" sx={{ mr: 0.5, fontSize: 14 }} />
-                Logistics Management System
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Mobile Menu Button */}
-          {isMobile ? (
+    <>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: 'linear-gradient(90deg, #1976d2 0%, #2196f3 100%)',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          mb: 2
+        }}
+      >
+        <Container maxWidth="lg">
+          <Toolbar disableGutters sx={{ py: { xs: 1, md: 0.5 } }}>
+            {/* Mobile menu button */}
             <IconButton
               color="inherit"
               aria-label="open drawer"
-              edge="end"
+              edge="start"
               onClick={handleDrawerToggle}
-              sx={{ ml: 'auto' }}
+              sx={{ mr: 2, display: { md: 'none' } }}
             >
-              {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+              <MenuIcon />
             </IconButton>
-          ) : (
-            /* Desktop Navigation */
-            <Box display="flex" gap={1} ml="auto">
-              {[
-                { text: 'Quotation Builder', icon: <DescriptionIcon />, path: '/bulk-quotation' },
-                { text: 'Vendor', icon: <CompareArrowsIcon />, path: '/vendor-lookup' },
-                { text: 'Quick Quote', icon: <ReceiptLongIcon />, path: '/quotations' },
-                { text: 'Route', icon: <ReceiptLongIcon />, path: '/route-lookup' },
-                { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }
-              ].map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <Tooltip key={item.path} title={item.text} arrow>
-                    <Button
-                      component={Link}
-                      to={item.path}
-                      sx={{
-                        color: 'white',
-                        borderRadius: '8px',
-                        px: 2,
-                        py: 1,
-                        minWidth: 'auto',
-                        position: 'relative',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        },
-                        '&::after': isActive ? {
-                          content: '""',
-                          position: 'absolute',
-                          bottom: 0,
-                          left: '50%',
-                          width: '40%',
-                          height: '3px',
-                          backgroundColor: 'white',
-                          transform: 'translateX(-50%)',
-                          borderRadius: '3px 3px 0 0',
-                        } : {}
-                      }}
-                      startIcon={item.icon}
-                    >
-                      {item.text}
-                    </Button>
-                  </Tooltip>
-                );
-              })}
-            </Box>
-          )}
-        </Toolbar>
-      </Container>
 
-      {/* Mobile Drawer */}
-      <Drawer
-        anchor="right"
-        open={isMobile && mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          '& .MuiDrawer-paper': { 
-            width: '75%', 
-            maxWidth: 300,
-            boxSizing: 'border-box',
-            background: 'linear-gradient(180deg, #1976d2 0%, #2196f3 100%)',
-            color: 'white'
-          },
-        }}
-      >
-        {drawer}
-      </Drawer>
-    </AppBar>
+            {/* Logo and Brand */}
+            <Box display="flex" alignItems="center" gap={2} sx={{ mr: { xs: 1, md: 5 } }}>
+              <img 
+                src={fnLogo} 
+                alt="FormulaNEXT Logo" 
+                style={{ 
+                  height: isMobile ? 72 : 80, 
+                  transition: 'all 0.3s ease',
+                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15))',
+                  margin: '4px 0',
+                  objectFit: 'contain',
+                  maxWidth: '100%',
+                  padding: '2px'
+                }} 
+              />
+              <Box>
+                <Typography 
+                  variant={isMobile ? "subtitle1" : "h6"} 
+                  fontWeight={700} 
+                  sx={{
+                    color: 'white',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    letterSpacing: '0.5px',
+                    lineHeight: 1.2
+                  }}
+                >
+                  FormulaNEXT Express
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    color: 'rgba(255,255,255,0.8)',
+                    mt: 0.5
+                  }}
+                >
+                  <LocalShippingIcon fontSize="small" sx={{ mr: 0.5, fontSize: 14 }} />
+                  Logistics Management System
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Desktop Navigation Links */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 'auto' }}>
+              {navigationItems.map((item) => (
+                <Tooltip 
+                  key={item.text}
+                  title={item.text}
+                  placement="bottom"
+                  arrow
+                  enterDelay={300}
+                  leaveDelay={100}
+                  componentsProps={{
+                    tooltip: {
+                      sx: {
+                        bgcolor: 'rgba(0, 0, 0, 0.8)',
+                        fontSize: '0.85rem',
+                        fontWeight: 500,
+                        p: 1,
+                        borderRadius: '6px',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                      }
+                    }
+                  }}
+                >
+                  <NavIconButton
+                    component={Link}
+                    to={item.path}
+                    active={location.pathname === item.path ? 1 : 0}
+                    aria-label={item.text}
+                    sx={{
+                      '&:hover': {
+                        background: alpha(theme.palette.common.white, 0.15),
+                      }
+                    }}
+                  >
+                    {item.icon}
+                  </NavIconButton>
+                </Tooltip>
+              ))}
+            </Box>
+          </Toolbar>
+        </Container>
+      </AppBar>
+
+      {/* Mobile Navigation Drawer */}
+      <Box component="nav">
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280 },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+    </>
   );
 }
 

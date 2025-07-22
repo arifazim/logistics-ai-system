@@ -139,6 +139,11 @@ function QuotationEngine() {
     ? [...otherRates].sort((a, b) => Number(b.rate) - Number(a.rate))
     : [];
 
+  // Compute both highest and lowest quote from all rates
+  const allRates = maxRate && otherRates ? [maxRate, ...otherRates] : (maxRate ? [maxRate] : []);
+  const highestQuote = allRates.length > 0 ? allRates.reduce((a, b) => (Number(a.rate) > Number(b.rate) ? a : b)) : null;
+  const lowestQuote = allRates.length > 0 ? allRates.reduce((a, b) => (Number(a.rate) < Number(b.rate) ? a : b)) : null;
+
   // Helper for loading skeletons
   const renderSkeletons = () => (
     <Box sx={{ mt: 4 }}>
@@ -149,7 +154,7 @@ function QuotationEngine() {
   );
 
   // Helper for summary bar with animation
-  const summaryBar = maxRate && (
+  const summaryBar = highestQuote && lowestQuote && (
     <Fade in={animateResults} timeout={500}>
       <GradientCard sx={{ mb: 4, overflow: 'hidden' }}>
         <CardContent>
@@ -170,46 +175,59 @@ function QuotationEngine() {
               borderRadius: 2
             }}>
               <CompareArrowsIcon color="primary" />
-              <Typography variant="h6" color="primary" fontWeight={600}>Best Quote</Typography>
+              <Typography variant="h6" color="primary" fontWeight={600}>Quote Summary</Typography>
             </Box>
-            
             <Box sx={{ display: 'flex', gap: isMobile ? 1 : 3, flexWrap: 'wrap' }}>
               <Chip 
                 icon={<LocationOnIcon />} 
-                label={`From: ${maxRate.from_origin}`}
+                label={`From: ${highestQuote.from_origin}`}
                 variant="outlined"
                 size={isMobile ? "small" : "medium"}
                 sx={{ borderColor: theme.palette.primary.light }}
               />
               <Chip 
                 icon={<LocationOnIcon />} 
-                label={`To: ${maxRate.area}`}
+                label={`To: ${highestQuote.area}`}
                 variant="outlined"
                 size={isMobile ? "small" : "medium"}
                 sx={{ borderColor: theme.palette.primary.light }}
               />
               <Chip 
                 icon={<LocalShippingIcon />} 
-                label={`${maxRate.vehicle_type}`}
+                label={`${highestQuote.vehicle_type}`}
                 variant="outlined"
                 size={isMobile ? "small" : "medium"}
                 sx={{ borderColor: theme.palette.primary.light }}
               />
             </Box>
-            
-            <Chip
-              label={`₹${maxRate.rate}`}
-              color="success"
-              size="medium"
-              sx={{ 
-                ml: isMobile ? 0 : 'auto', 
-                fontWeight: 700, 
-                fontSize: '1.1rem',
-                py: 2.5,
-                borderRadius: 3,
-                boxShadow: theme.shadows[2]
-              }}
-            />
+            <Box sx={{ display: 'flex', gap: 2, ml: isMobile ? 0 : 'auto' }}>
+              <Chip
+                label={`Highest: ₹${highestQuote.rate}`}
+                size="medium"
+                sx={{ 
+                  bgcolor: '#ffb74d', // orange
+                  color: '#b53f00', // dark orange
+                  fontWeight: 700, 
+                  fontSize: '1.1rem',
+                  py: 2.5,
+                  borderRadius: 3,
+                  boxShadow: theme.shadows[2]
+                }}
+              />
+              <Chip
+                label={`Lowest: ₹${lowestQuote.rate}`}
+                size="medium"
+                sx={{ 
+                  bgcolor: '#c8e6c9', // light green
+                  color: '#1b5e20', // dark green
+                  fontWeight: 700, 
+                  fontSize: '1.1rem',
+                  py: 2.5,
+                  borderRadius: 3,
+                  boxShadow: theme.shadows[2]
+                }}
+              />
+            </Box>
           </Box>
         </CardContent>
       </GradientCard>
@@ -234,7 +252,7 @@ function QuotationEngine() {
               fontSize: { xs: '1rem', sm: '1.5rem', md: '2rem' }
             }}
           >
-            Quick Quotes
+            Routes Summary
           </Typography>
           <Typography 
             variant="subtitle1" 
@@ -368,9 +386,21 @@ function QuotationEngine() {
                       borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                       bgcolor: alpha(theme.palette.primary.main, 0.05)
                     }}>
-                      <Typography variant="subtitle1" color="primary" fontWeight={600}>
-                        Highest Quotation from {maxRate.vendor_name}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                        <Typography variant="subtitle1" color="primary" fontWeight={600}>
+                          Quotation Range
+                        </Typography>
+                        <Chip
+                          label={`Highest: ₹${highestQuote?.rate} (${highestQuote?.vendor_name})`}
+                          size="small"
+                          sx={{ bgcolor: '#ffb74d', color: '#b53f00', fontWeight: 700, ml: 1 }}
+                        />
+                        <Chip
+                          label={`Lowest: ₹${lowestQuote?.rate} (${lowestQuote?.vendor_name})`}
+                          size="small"
+                          sx={{ bgcolor: '#c8e6c9', color: '#1b5e20', fontWeight: 700, ml: 1 }}
+                        />
+                      </Box>
                     </Box>
                     
                     <CardContent sx={{ p: { xs: 2, sm: 3 } }}>

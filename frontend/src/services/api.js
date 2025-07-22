@@ -9,7 +9,10 @@ axios.defaults.timeout = 15000; // 15 seconds timeout
 const apiCache = {
   vendorRates: null,
   vendorRatesTimestamp: null,
-  pendingVendorRatesPromise: null
+  pendingVendorRatesPromise: null,
+  vendors: null,
+  vendorsTimestamp: null,
+  pendingVendorsPromise: null
 };
 
 // Cache expiration time (5 minutes)
@@ -81,4 +84,51 @@ export const getVendorRates = async () => {
   });
   
   return apiCache.pendingVendorRatesPromise;
+};
+
+// Get all vendors
+export const getVendors = async () => {
+  // Check if we have a valid cached response
+  const now = Date.now();
+  if (apiCache.vendors && apiCache.vendorsTimestamp && 
+      (now - apiCache.vendorsTimestamp < CACHE_EXPIRY)) {
+    console.log('Using cached vendors data');
+    return apiCache.vendors;
+  }
+  
+  // If there's already a pending request, return that promise
+  if (apiCache.pendingVendorsPromise) {
+    console.log('Reusing pending vendors request');
+    return apiCache.pendingVendorsPromise;
+  }
+  
+  // Create a new request promise
+  console.log(`Fetching vendors from: ${API_BASE_URL}/vendors`);
+  apiCache.pendingVendorsPromise = new Promise(async (resolve) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/vendors`);
+      
+      console.log('Vendors API Response:', response.data);
+      
+      // Cache the successful response
+      apiCache.vendors = response.data;
+      apiCache.vendorsTimestamp = Date.now();
+      resolve(response.data);
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      const errorResponse = { 
+        success: false, 
+        vendors: [], 
+        error: error.message 
+      };
+      resolve(errorResponse); // Resolve with error response rather than rejecting
+    } finally {
+      // Clear the pending promise after a short delay
+      setTimeout(() => {
+        apiCache.pendingVendorsPromise = null;
+      }, 1000);
+    }
+  });
+  
+  return apiCache.pendingVendorsPromise;
 };

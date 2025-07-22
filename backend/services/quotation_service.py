@@ -119,3 +119,12 @@ class QuotationService:
                 'vendor_performance': []
             }
         return self.data_processor.calculate_analytics(df)
+
+    def get_vendors(self) -> List[str]:
+        """Get a list of all unique vendor names"""
+        df = self._get_fresh_data()
+        if df.empty:
+            return []
+        # Extract unique vendor names and sort them
+        vendors = df['vendor_name'].dropna().unique().tolist()
+        return sorted(vendors)

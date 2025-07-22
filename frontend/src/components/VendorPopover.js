@@ -2,6 +2,14 @@ import React from 'react';
 import { Popover, Box, Typography } from '@mui/material';
 
 function VendorPopover({ popoverAnchor, popoverContent, popoverTitle, handlePopoverClose }) {
+  // Determine min and max rates
+  let minRate = null, maxRate = null;
+  if (popoverContent.length > 0) {
+    const rates = popoverContent.map(v => v.rate);
+    minRate = Math.min(...rates);
+    maxRate = Math.max(...rates);
+  }
+
   return (
     <Popover
       open={Boolean(popoverAnchor)}
@@ -17,14 +25,16 @@ function VendorPopover({ popoverAnchor, popoverContent, popoverTitle, handlePopo
         </Typography>
         {popoverContent.length > 0 ? (
           <>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
-              Max Rate: ₹{popoverContent[0].rate} ({popoverContent[0].vendorName})
-            </Typography>
-            {popoverContent.map((vendor, i) => (
-              <Typography key={i} variant="body2">
-                <span style={{ color: '#1976d2' }}>{vendor.vendorName}</span>: <span style={{ color: '#2e7d32', fontWeight: 'bold' }}>₹{vendor.rate}</span>
-              </Typography>
-            ))}
+            {popoverContent.map((vendor, i) => {
+              let color = '#8e24aa'; // purple for others
+              if (vendor.rate === minRate) color = '#2e7d32'; // green for lowest
+              if (vendor.rate === maxRate) color = '#d32f2f'; // red for highest
+              return (
+                <Typography key={i} variant="body2">
+                  <span style={{ color }}>{vendor.vendorName}</span>: <span style={{ color, fontWeight: 'bold' }}>₹{vendor.rate}</span>
+                </Typography>
+              );
+            })}
           </>
         ) : (
           <Typography variant="body2" color="text.secondary">No vendor rates found.</Typography>

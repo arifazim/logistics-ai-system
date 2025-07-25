@@ -19,18 +19,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 #app.config['RATELIMIT_STORAGE_URI'] = Config.RATELIMIT_STORAGE_URI
 
-# Configure CORS to allow requests from specific origins
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "http://localhost:3001",
-            "https://logistics-services-4ikv.onrender.com",
-            "https://logistics-ai-system.vercel.app"
-        ],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Cache-Control", "Pragma"]
-    }
-})
+# Configure CORS to allow requests from all origins (most permissive setting)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Rate limiting
 limiter = Limiter(

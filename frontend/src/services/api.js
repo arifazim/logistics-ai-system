@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+// Get the API base URL from environment variable or use the deployed URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (window.location.hostname === 'localhost' ? 
+    'http://localhost:5000/api' : 
+    'https://logistics-services-api-4ikv.onrender.com/api');
 
 // Configure axios defaults for all requests
 axios.defaults.timeout = 15000; // 15 seconds timeout

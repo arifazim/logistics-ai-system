@@ -4,6 +4,7 @@ import RateConfig from './RateConfig';
 import ColumnSelector from './ColumnSelector';
 import OutputPreview from './OutputPreview';
 import VendorPopover from './VendorPopover';
+import BestVendorContacts from './BestVendorContacts';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import axios from 'axios';
@@ -13,7 +14,10 @@ import autoTable from 'jspdf-autotable';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
-const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 
+  (window.location.hostname === 'localhost' ? 
+    'http://localhost:5000/api' : 
+    'https://logistics-services-api-4ikv.onrender.com/api');
 
 // Vehicle rate columns to fill (do not include PER CASE RATE)
 const VEHICLE_RATE_COLUMNS = [
@@ -625,7 +629,8 @@ function BulkQuotation() {
     const dcCityIdx = findColIdx(header, 'dc city');
     const customerCityIdx = findColIdx(header, 'customer city') !== -1
       ? findColIdx(header, 'customer city')
-      : findColIdx(header, 'customer');
+      : findColIdx(header, 'customer'); // fallback to 'Customer'
+    const customerPincodeIdx = findColIdx(header, 'customer pincode');
 
     const dcCity = row[dcCityIdx] || '';
     const customerCity = row[customerCityIdx] || '';
@@ -1043,6 +1048,18 @@ function BulkQuotation() {
           handleCellClick={handleCellClick}
           VEHICLE_RATE_COLUMNS={VEHICLE_RATE_COLUMNS}
         />
+        
+        {/* New section for best vendor contacts with lowest rates */}
+        <BestVendorContacts
+          previewData={previewData}
+          vendorRatesData={vendorRatesData}
+          VEHICLE_RATE_COLUMNS={VEHICLE_RATE_COLUMNS}
+          findColIdx={findColIdx}
+          normalizeCity={normalizeCity}
+          findVendorCol={findVendorCol}
+          extractVehicleType={extractVehicleType}
+        />
+        
         <VendorPopover
           popoverAnchor={popoverAnchor}
           popoverContent={popoverContent}

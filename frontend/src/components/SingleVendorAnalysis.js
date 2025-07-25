@@ -37,6 +37,154 @@ const GradientCard = styled(Card)(({ theme }) => ({
   }
 }));
 
+const ModernControlsCard = styled(Paper)(({ theme }) => ({
+  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(theme.palette.secondary.main, 0.02)} 100%)`,
+  backdropFilter: 'blur(12px)',
+  borderRadius: theme.shape.borderRadius * 3,
+  border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+  boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
+    transform: 'translateY(-2px)'
+  }
+}));
+
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    height: '56px',
+    borderRadius: theme.shape.borderRadius * 2,
+    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+    backdropFilter: 'blur(8px)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.background.paper, 0.95),
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
+        borderWidth: '2px',
+      }
+    },
+    '&.Mui-focused': {
+      backgroundColor: theme.palette.background.paper,
+      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
+        borderWidth: '2px',
+      }
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: alpha(theme.palette.primary.main, 0.2),
+      transition: 'all 0.3s ease',
+    }
+  },
+  '& .MuiInputLabel-root': {
+    fontWeight: 500,
+    '&.Mui-focused': {
+      color: theme.palette.primary.main,
+      fontWeight: 600,
+    }
+  }
+}));
+
+const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    height: '56px',
+    borderRadius: theme.shape.borderRadius * 2,
+    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+    backdropFilter: 'blur(8px)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.background.paper, 0.95),
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
+        borderWidth: '2px',
+      }
+    },
+    '&.Mui-focused': {
+      backgroundColor: theme.palette.background.paper,
+      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
+        borderWidth: '2px',
+      }
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: alpha(theme.palette.primary.main, 0.2),
+      transition: 'all 0.3s ease',
+    }
+  }
+}));
+
+const StyledSelect = styled(FormControl)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    height: '56px',
+    borderRadius: theme.shape.borderRadius * 2,
+    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+    backdropFilter: 'blur(8px)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.background.paper, 0.95),
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
+        borderWidth: '2px',
+      }
+    },
+    '&.Mui-focused': {
+      backgroundColor: theme.palette.background.paper,
+      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: theme.palette.primary.main,
+        borderWidth: '2px',
+      }
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: alpha(theme.palette.primary.main, 0.2),
+      transition: 'all 0.3s ease',
+    }
+  },
+  '& .MuiInputLabel-root': {
+    fontWeight: 500,
+    '&.Mui-focused': {
+      color: theme.palette.primary.main,
+      fontWeight: 600,
+    }
+  }
+}));
+
+const IconContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '48px',
+  height: '48px',
+  borderRadius: theme.shape.borderRadius * 2,
+  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+  color: theme.palette.primary.contrastText,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+  marginBottom: theme.spacing(1),
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+  }
+}));
+
+const ResetButton = styled(IconButton)(({ theme }) => ({
+  width: '56px',
+  height: '56px',
+  borderRadius: theme.shape.borderRadius * 2,
+  backgroundColor: alpha(theme.palette.error.main, 0.1),
+  border: `2px solid ${alpha(theme.palette.error.main, 0.2)}`,
+  color: theme.palette.error.main,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.error.main, 0.15),
+    borderColor: theme.palette.error.main,
+    transform: 'scale(1.05)',
+    boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
+  }
+}));
+
 const VendorAvatar = styled(Avatar)(({ theme }) => ({
   backgroundColor: alpha(theme.palette.secondary.main, 0.15),
   color: theme.palette.secondary.main,
@@ -128,8 +276,8 @@ const CustomPopper = props => {
       style={{
         ...style,
         width: 'auto',
-        minWidth: '300px',
-        maxWidth: '500px'
+        minWidth: '400px',
+        maxWidth: '650px'
       }}
     />
   );
@@ -138,6 +286,7 @@ const CustomPopper = props => {
 function SingleVendorAnalysis() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [vendors, setVendors] = useState([]);
@@ -492,150 +641,161 @@ function SingleVendorAnalysis() {
     <Box sx={{ pt: 2, pb: 6 }}>
       <Fade in={true} style={{ transitionDelay: '150ms' }}>
         <Box>
-          <Typography
-            variant="h4"
-            sx={{
-              mb: 1,
-              fontWeight: 700,
-              color: theme.palette.primary.main,
-              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
-            }}
-          >
-            Vendor Rate Analysis
-          </Typography>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              mb: 3,
-              color: 'text.secondary',
-              fontSize: { xs: '0.9rem', sm: '1rem' }
-            }}
-          >
-            Select a vendor to analyze their rates across all routes
-          </Typography>
-          
-          <GradientCard sx={{ mt: 3, mb: 4 }}>
-            <CardContent>
-              <Grid container spacing={3} alignItems="center">
-                {/* Vendor Selection */}
-                <Grid item xs={12} md={9}>
-                  <Autocomplete
-                    id="vendor-selector"
-                    options={vendors || []}
-                    value={selectedVendor}
-                    onChange={handleVendorSelect}
-                    getOptionLabel={(option) => option || ''}
-                    isOptionEqualToValue={(option, value) => option === value}
-                    noOptionsText="No vendors available"
-                    loadingText="Loading vendors..."
-                    loading={loading}
-                    sx={{
-                      width: '100%',
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderWidth: '2px', // Optional: thicker border
-                          borderColor: 'gray', // Optional: custom color
-                        },
-                      },
-                    }}
-                    ListboxProps={{
-                      style: {
-                        maxHeight: '300px', // Increased height from default ~224px
-                        width: '500px', // Increased width to better accommodate long vendor names
-                        padding: '8px 0'
-                      }
-                    }}
-                    PopperComponent={CustomPopper}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        fullWidth
+          {/* Modern Header Section */}
+          <Box sx={{ 
+            textAlign: 'center', 
+            mb: 4,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+            borderRadius: 4,
+            p: 4,
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+          }}>
+            <Typography
+              variant="h3"
+              sx={{
+                mb: 2,
+                fontWeight: 800,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' }
+              }}
+            >
+              Vendor Rate Analysis
+            </Typography>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: 'text.secondary',
+                fontWeight: 400,
+                fontSize: { xs: '1rem', sm: '1.1rem' }
+              }}
+            >
+              Comprehensive analysis of vendor rates across all routes and vehicle types
+            </Typography>
+          </Box>
 
-                        label="Select Vendor"
-                        sx={{ width: '100%' }}
-                        placeholder="Start typing to search vendors..."
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <React.Fragment>
-                              {loading ? (
-                                <CircularProgress color="inherit" size={20} />
-                              ) : null}
-                              {params.InputProps.endAdornment}
-                            </React.Fragment>
-                          ),
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-
-                {/* Route Search */}
-                {!loading && !error && rateData && (
-                  <Grid item xs={12} sx={{ mt: 2 }}>
+          {/* Modern Controls Section */}
+          <ModernControlsCard elevation={0} sx={{ mb: 4, p: 4 }}>
+            <Grid container spacing={3} alignItems="stretch">
+              {/* Vendor Selection */}
+              <Grid item xs={12} lg={3}>
+                <Box sx={{ textAlign: 'center', mb: 2 }}>                  
+                  <Typography variant="subtitle1" fontWeight="600" sx={{ color: 'primary.main' }}>
+                    Select Vendor
+                  </Typography>
+                </Box>
+                <StyledAutocomplete
+                  id="vendor-selector"
+                  options={vendors || []}
+                  value={selectedVendor}
+                  onChange={handleVendorSelect}
+                  getOptionLabel={(option) => option || ''}
+                  isOptionEqualToValue={(option, value) => option === value}
+                  noOptionsText="No vendors available"
+                  loadingText="Loading vendors..."
+                  loading={loading}
+                  PopperComponent={CustomPopper}
+                  renderInput={(params) => (
                     <TextField
+                      {...params}
                       fullWidth
-                      id="route-search"
-                      label="Search Routes"
-                      placeholder="Search by origin or destination..."
-                      onChange={handleRouteSearch}
+                      variant="outlined"
+                      placeholder="Choose vendor..."
                       InputProps={{
+                        ...params.InputProps,
                         startAdornment: (
-                          <SearchIcon color="primary" sx={{ mr: 1 }} />
+                          <BusinessIcon color="primary" sx={{ ml: 0.5, mr: 1 }} />
+                        ),
+                        endAdornment: (
+                          <>
+                            {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
                         ),
                       }}
-                      variant="outlined"
-                      sx={{ mb: 2 }}
                     />
-                  </Grid>
-                )}
-                
-                {/* Vehicle Type Filter */}
-                <Grid item xs={12} md={6}>
-                  {rateData && (
-                    <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 1 }}>
-                      <FormControl variant="outlined" size="small" sx={{ width: 150 }}>
-                        <InputLabel>Filter by Vehicle</InputLabel>
-                        <Select
-                          value={selectedVehicleType}
-                          onChange={(e) => setSelectedVehicleType(e.target.value)}
-                          label="Filter by Vehicle"
-                        >
-                          <MenuItem value="all">All Vehicles</MenuItem>
-                          {vehicleTypes.map(type => (
-                            <MenuItem key={type} value={type}>
-                              {type}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <IconButton 
-                        onClick={handleResetFilters}
-                        color="primary"
-                      >
-                        <RefreshIcon />
-                      </IconButton>
-                    </Box>
                   )}
-                </Grid>
-                
-                {/* Reset Filters Button */}
-                <Grid item xs={12} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
-                  <IconButton 
-                    color="primary" 
-                    onClick={handleResetFilters}
-                    sx={{ 
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-                      borderRadius: '8px',
-                      p: 1
-                    }}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </Grid>
+                  ListboxProps={{
+                    style: {
+                      maxHeight: '300px',
+                      width: '650px',
+                      padding: '8px 0'
+                    }
+                  }}
+                />
               </Grid>
-            </CardContent>
-          </GradientCard>
+              
+              {/* Route Search */}
+              <Grid item xs={12} lg={3}>
+                <Box sx={{ textAlign: 'center', mb: 2 }}>                
+                  <Typography variant="subtitle1" fontWeight="600" sx={{ color: 'primary.main' }}>
+                    Search Routes
+                  </Typography>
+                </Box>
+                <StyledTextField
+                  fullWidth
+                  id="route-search"
+                  placeholder="Search routes..."
+                  onChange={handleRouteSearch}
+                  value={searchQuery}
+                  disabled={!rateData}
+                  InputProps={{
+                    startAdornment: (
+                      <SearchIcon color="primary" sx={{ ml: 0.5, mr: 1 }} />
+                    ),
+                  }}
+                  variant="outlined"
+                />
+              </Grid>
+
+              {/* Vehicle Type Filter */}
+              <Grid item xs={12} lg={3}>
+                <Box sx={{ textAlign: 'center', mb: 2 }}>                  
+                  <Typography variant="subtitle1" fontWeight="600" sx={{ color: 'primary.main' }}>
+                    Filter by Vehicle Type
+                  </Typography>
+                </Box>
+                <StyledSelect fullWidth variant="outlined">
+                  <InputLabel id="vehicle-type-select-label">Vehicle Type</InputLabel>
+                  <Select
+                    labelId="vehicle-type-select-label"
+                    value={selectedVehicleType}
+                    onChange={(e) => setSelectedVehicleType(e.target.value)}
+                    label="Vehicle Type"
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <LocalShippingIcon color="primary" sx={{ mr: 1 }} />
+                        {selected === 'all' ? 'All Vehicle Types' : selected}
+                      </Box>
+                    )}
+                  >
+                    <MenuItem value="all">All Vehicle Types</MenuItem>
+                    {vehicleTypes.map((type) => (
+                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                    ))}
+                  </Select>
+                </StyledSelect>
+              </Grid>
+
+              {/* Reset Button */}
+              <Grid item xs={12} lg={3}>
+                <Box sx={{ textAlign: 'center', mb: 2 }}>                 
+                  <Typography variant="subtitle1" fontWeight="600" sx={{ color: 'primary.main' }}>
+                    Reset Filters
+                  </Typography>
+                </Box>
+                <ResetButton 
+                  onClick={handleResetFilters}
+                  fullWidth
+                  sx={{ height: '56px', width: '100%' }}
+                >
+                  <RefreshIcon fontSize="medium" />
+                </ResetButton>
+              </Grid>
+            </Grid>
+          </ModernControlsCard>
           
           {/* Error Message */}
           {error && (
@@ -879,16 +1039,19 @@ function SingleVendorAnalysis() {
               alignItems: 'center', 
               justifyContent: 'center',
               mt: 4,
-              p: 3,
-              bgcolor: alpha(theme.palette.primary.main, 0.02),
-              borderRadius: 2
+              p: 4,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.02)} 0%, ${alpha(theme.palette.secondary.main, 0.02)} 100%)`,
+              borderRadius: 4,
+              border: `2px dashed ${alpha(theme.palette.primary.main, 0.2)}`
             }}>
-              <CompareIcon sx={{ fontSize: 60, color: alpha(theme.palette.primary.main, 0.3), mb: 2 }} />
-              <Typography variant="h6" align="center" gutterBottom>
-                Select a Vendor to Begin
+              <IconContainer sx={{ mb: 2, width: 80, height: 80 }}>
+                <CompareIcon sx={{ fontSize: 40 }} />
+              </IconContainer>
+              <Typography variant="h5" align="center" gutterBottom fontWeight={600}>
+                Select a Vendor to Begin Analysis
               </Typography>
-              <Typography variant="body2" align="center" color="text.secondary">
-                Choose a vendor from the dropdown above to analyze their rates
+              <Typography variant="body1" align="center" color="text.secondary" sx={{ maxWidth: 400 }}>
+                Choose a vendor from the dropdown above to view comprehensive rate analysis across all routes and vehicle types
               </Typography>
             </Box>
           )}

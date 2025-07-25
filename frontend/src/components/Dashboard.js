@@ -21,7 +21,10 @@ import { getDashboardAnalytics } from '../services/api';
 import axios from 'axios';
 
 // Constants
-const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 
+  (window.location.hostname === 'localhost' ? 
+    'http://localhost:5000/api' : 
+    'https://logistics-services-api-4ikv.onrender.com/api');
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 const ANOMALY_THRESHOLD = 25; // Percentage threshold for anomaly detection
 

@@ -46,6 +46,15 @@
     COPY --from=backend-build /app/backend /app/backend
     COPY --from=backend-build /venv /venv
     
+    # ✅ DEBUG: Verify that /venv/bin/python exists
+    RUN if [ ! -f /venv/bin/python ]; then \
+    echo "❌ ERROR: /venv/bin/python does NOT exist!" && \
+    ls -la /venv/bin || \
+    exit 1; \
+    else \
+    echo "✅ /venv/bin/python exists"; \
+    fi
+    
     # Install Supervisor
     RUN apk add --no-cache supervisor python3 libffi
     
@@ -56,7 +65,7 @@
     COPY ./supervisord.conf /etc/supervisord.conf
     
     # Expose port (Render uses dynamic port, but Nginx listens on 80)
-    EXPOSE 80
+    #EXPOSE 80
     
     # Start Supervisor
     CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

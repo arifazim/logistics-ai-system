@@ -22,6 +22,24 @@ app.config.from_object(Config)
 # Configure CORS to allow requests from all origins (most permissive setting)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+# Add CORS headers to all responses
+@app.after_request
+def add_cors_headers(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Cache-Control,Pragma')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
+# Handle OPTIONS requests for CORS preflight
+@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+@app.route('/<path:path>', methods=['OPTIONS'])
+def options_handler(path):
+    response = jsonify({
+        'status': 'ok',
+        'message': 'CORS preflight handled'
+    })
+    return response
+
 # Rate limiting
 limiter = Limiter(
     key_func=get_remote_address,

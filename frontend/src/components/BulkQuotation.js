@@ -17,7 +17,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 const API_URL = process.env.REACT_APP_API_URL || 
   (window.location.hostname === 'localhost' ? 
     'http://localhost:5000/api' : 
-    'https://logistics-services-api-4ikv.onrender.com/api');
+    'https://logistics-services-4ikv.onrender.com/api');
 
 // Vehicle rate columns to fill (do not include PER CASE RATE)
 const VEHICLE_RATE_COLUMNS = [

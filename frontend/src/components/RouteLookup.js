@@ -6,7 +6,7 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 
   (window.location.hostname === 'localhost' ? 
     'http://localhost:5000/api' : 
-    'https://logistics-services-api-4ikv.onrender.com/api');
+    'https://logistics-services-4ikv.onrender.com/api');
 
 function RouteLookup() {
   const [vendorRates, setVendorRates] = useState([]);

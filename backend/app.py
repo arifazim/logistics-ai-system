@@ -34,12 +34,20 @@ app.config.from_object(Config)
 # Allow your frontend domain only (recommended for production)
 frontend_origin = os.getenv("FRONTEND_URL", "https://logistics-services-4ikv.onrender.com")
 
-# Add localhost for development
-allowed_origins = [frontend_origin, "http://localhost:3000"]
+# Add localhost for development and deployed frontend
+allowed_origins = [frontend_origin, "http://localhost:3000", "https://logistics-services-4ikv.onrender.com"]
 
-CORS(app)
+# Configure CORS with explicit settings
+CORS(app, resources={
+    r"/*": {
+        "origins": allowed_origins,
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Cache-Control", "Pragma"],
+        "supports_credentials": True
+    }
+})
 
-# Add CORS headers manually (optional, but safe)
+# Add CORS headers manually to ensure they're properly set
 @app.after_request
 def after_request(response):
     origin = request.headers.get('Origin')

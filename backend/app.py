@@ -37,12 +37,7 @@ frontend_origin = os.getenv("FRONTEND_URL", "https://logistics-services-4ikv.onr
 # Add localhost for development
 allowed_origins = [frontend_origin, "http://localhost:3000"]
 
-CORS(app, resources={
-    r"/api/*": {
-        "origins": allowed_origins,
-        "supports_credentials": True
-    }
-})
+CORS(app)
 
 # Add CORS headers manually (optional, but safe)
 @app.after_request
@@ -91,7 +86,7 @@ except Exception as e:
 
 # === Routes ===
 
-@app.route("/healthz")
+@app.route("/api/healthz")
 def health():
     return {"status": "ok"}
 

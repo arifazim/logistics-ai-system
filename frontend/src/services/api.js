@@ -6,6 +6,28 @@ const API_BASE_URL = process.env.REACT_APP_API_URL ||
     'http://localhost:5000/api' : 
     'https://logistics-services-api-4ikv.onrender.com/api');
 
+// Log the API base URL for debugging
+console.log('Using API base URL:', API_BASE_URL);
+
+// Function to check if the API is available
+const checkApiAvailability = async () => {
+  try {
+    console.log('Checking API availability...');
+    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/healthz`, {
+      method: 'GET',
+      mode: 'no-cors' // This allows us to at least attempt the request even if CORS blocks it
+    });
+    console.log('API health check response status:', response.status);
+    return true;
+  } catch (error) {
+    console.error('API health check failed:', error);
+    return false;
+  }
+};
+
+// Run the check when the module loads
+checkApiAvailability();
+
 // Configure axios defaults for all requests
 axios.defaults.timeout = 15000; // 15 seconds timeout
 

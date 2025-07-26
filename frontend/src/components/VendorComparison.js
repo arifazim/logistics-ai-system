@@ -447,7 +447,7 @@ function VendorComparison() {
     
     return (
       <Grid container spacing={3} sx={{ mt: 1 }}>
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} sm={8}>
           <Card elevation={2}>
             <CardHeader title="Potential Savings by Vendor" />
             <CardContent>
@@ -481,7 +481,7 @@ function VendorComparison() {
           </Card>
         </Grid>
         
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={4}>
           <Card elevation={2} sx={{ height: '100%' }}>
             <CardHeader title="Savings Breakdown" />
             <CardContent>
@@ -565,7 +565,7 @@ function VendorComparison() {
         
         {showFilters && (
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
                 <InputLabel>Vehicle Type</InputLabel>
                 <Select
@@ -581,7 +581,7 @@ function VendorComparison() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
                 <InputLabel>Origin</InputLabel>
                 <Select

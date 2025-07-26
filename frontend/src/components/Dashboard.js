@@ -261,17 +261,16 @@ function Dashboard() {
     return uniqueOptimizations.sort((a, b) => b.percentageDiff - a.percentageDiff);
   }, [vendorRates, analytics]);
 
-  // Update analytics with calculated data when they change
-  useEffect(() => {
-    if (analytics) {
-      setAnalytics(prevAnalytics => ({
-        ...prevAnalytics,
-        savings_opportunities: savingsOpportunities,
-        anomalies: anomalies,
-        routeOptimizationSuggestions: routeOptimizations
-      }));
-    }
-  }, [savingsOpportunities, anomalies, routeOptimizations]);
+  // Instead of updating analytics in a useEffect, use a derived value
+  const enhancedAnalytics = useMemo(() => {
+    if (!analytics) return null;
+    return {
+      ...analytics,
+      savings_opportunities: savingsOpportunities,
+      anomalies: anomalies,
+      routeOptimizationSuggestions: routeOptimizations
+    };
+  }, [analytics, savingsOpportunities, anomalies, routeOptimizations]);
 
   // Calculate vendor performance metrics
   const calculateVendorPerformance = useCallback((vendorRates) => {
@@ -453,7 +452,7 @@ function Dashboard() {
         <Box>
           {/* Overview Cards */}
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item xs={12} sm={6} lg={3}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>
@@ -466,7 +465,7 @@ function Dashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item xs={12} sm={6} lg={3}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>
@@ -479,7 +478,7 @@ function Dashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item xs={12} sm={6} lg={3}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>
@@ -492,7 +491,7 @@ function Dashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item xs={12} sm={6} lg={3}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>
@@ -774,7 +773,7 @@ function Dashboard() {
           
           {/* Route Optimization Charts */}
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>
@@ -817,7 +816,7 @@ function Dashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>
@@ -972,7 +971,7 @@ function Dashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>
@@ -1055,7 +1054,7 @@ function Dashboard() {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={600} mb={2}>

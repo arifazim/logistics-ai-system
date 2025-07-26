@@ -13,7 +13,7 @@ console.log('Using API base URL:', API_BASE_URL);
 const checkApiAvailability = async () => {
   try {
     console.log('Checking API availability...');
-    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/healthz`, {
+    const response = await fetch(`${API_BASE_URL}/api/healthz`, {
       method: 'GET',
       mode: 'no-cors' // This allows us to at least attempt the request even if CORS blocks it
     });

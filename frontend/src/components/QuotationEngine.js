@@ -1,16 +1,18 @@
-import React, { useState, lazy, Suspense } from 'react';
-import { 
-  Container, Typography, TextField, Button, Card, CardContent, Box,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-  Paper, Alert, CircularProgress, Skeleton, Fade, Chip, Divider,
-  useMediaQuery, alpha
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Box, Typography, TextField, Button, Card, CardContent,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Chip, CircularProgress, Alert, useMediaQuery, alpha,
+  Container, Fade, Skeleton, Divider, Autocomplete
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
-import SearchIcon from '@mui/icons-material/Search';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import SearchIcon from '@mui/icons-material/Search';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
-import { searchQuotations } from '../services/api';
+
+// Import API service
+import { searchQuotations, getVendorRates } from '../services/api';
 
 // Styled components for custom UI elements
 const GradientCard = styled(Card)(({ theme }) => ({
@@ -75,6 +77,61 @@ function QuotationEngine() {
   const [fromLocation, setFromLocation] = useState('');
   const [toLocation, setToLocation] = useState('');
   const [vehicleType, setVehicleType] = useState('');
+  
+  // API data state
+  const [vendorRatesData, setVendorRatesData] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  
+  // Fetch vendor rates data for dropdown options
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setDataLoading(true);
+        const response = await getVendorRates();
+        if (response && response.rates) {
+          setVendorRatesData(response.rates);
+        }
+      } catch (error) {
+        console.error('Error fetching dropdown data:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Dropdown options derived from API data
+  const fromLocations = useMemo(() => {
+    return [...new Set(vendorRatesData
+      .map(rate => rate.from_origin)
+      .filter(Boolean)
+    )].sort();
+  }, [vendorRatesData]);
+  
+  const toLocations = useMemo(() => {
+    // If fromLocation is selected, filter to only show destinations available from that origin
+    if (fromLocation) {
+      return [...new Set(vendorRatesData
+        .filter(rate => rate.from_origin === fromLocation)
+        .map(rate => rate.area)
+        .filter(Boolean)
+      )].sort();
+    } else {
+      // If no fromLocation is selected, show all possible destinations
+      return [...new Set(vendorRatesData
+        .map(rate => rate.area)
+        .filter(Boolean)
+      )].sort();
+    }
+  }, [vendorRatesData, fromLocation]);
+  
+  const vehicleTypes = useMemo(() => {
+    return [...new Set(vendorRatesData
+      .map(rate => rate.vehicle_type)
+      .filter(Boolean)
+    )].sort();
+  }, [vendorRatesData]);
   
   // Results state
   const [maxRate, setMaxRate] = useState(null);
@@ -276,15 +333,23 @@ function QuotationEngine() {
                   alignItems: isTablet ? 'stretch' : 'center'
                 }}
               >
-                <TextField
-                  label="From Location"
+                <Autocomplete
+                  options={fromLocations}
                   value={fromLocation}
-                  onChange={e => setFromLocation(e.target.value)}
-                  required
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: <LocationOnIcon color="primary" sx={{ mr: 1, opacity: 0.7 }} />,
-                  }}
+                  onChange={(event, newValue) => setFromLocation(newValue)}
+                  loading={dataLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="From Location"
+                      required
+                      variant="outlined"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: <LocationOnIcon color="primary" sx={{ mr: 1, opacity: 0.7 }} />,
+                      }}
+                    />
+                  )}
                   sx={{ 
                     flex: 1,
                     '& .MuiOutlinedInput-root': {
@@ -296,15 +361,23 @@ function QuotationEngine() {
                   }}
                 />
                 
-                <TextField
-                  label="To Location"
+                <Autocomplete
+                  options={toLocations}
                   value={toLocation}
-                  onChange={e => setToLocation(e.target.value)}
-                  required
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: <LocationOnIcon color="primary" sx={{ mr: 1, opacity: 0.7 }} />,
-                  }}
+                  onChange={(event, newValue) => setToLocation(newValue)}
+                  loading={dataLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="To Location"
+                      required
+                      variant="outlined"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: <LocationOnIcon color="primary" sx={{ mr: 1, opacity: 0.7 }} />,
+                      }}
+                    />
+                  )}
                   sx={{ 
                     flex: 1,
                     '& .MuiOutlinedInput-root': {
@@ -316,14 +389,22 @@ function QuotationEngine() {
                   }}
                 />
                 
-                <TextField
-                  label="Vehicle Type (optional)"
+                <Autocomplete
+                  options={vehicleTypes}
                   value={vehicleType}
-                  onChange={e => setVehicleType(e.target.value)}
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: <LocalShippingIcon color="primary" sx={{ mr: 1, opacity: 0.7 }} />,
-                  }}
+                  onChange={(event, newValue) => setVehicleType(newValue)}
+                  loading={dataLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Vehicle Type (optional)"
+                      variant="outlined"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: <LocalShippingIcon color="primary" sx={{ mr: 1, opacity: 0.7 }} />,
+                      }}
+                    />
+                  )}
                   sx={{ 
                     flex: isTablet ? 1 : 0.8,
                     '& .MuiOutlinedInput-root': {
